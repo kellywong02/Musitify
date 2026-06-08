@@ -1,0 +1,26 @@
+{
+  "name": "music-app",
+  "version": "1.0.0",
+  "description": "Simple music app with login and registration for Playwright testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed"
+  },
+  "author": "kelly",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.5",
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "pg": "^8.21.0"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "typescript": "^6.0.3"
+  }
+}
