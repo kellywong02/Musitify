@@ -150,37 +150,14 @@ http://localhost:5173
 
 Coming soon...
 
-
-## 🤝 Contribution
-
-Contributions are welcome!
-
-1. Fork this repository
-2. Create a new branch
-
-```bash
-git checkout -b feature/new-feature
-```
-
-3. Commit changes
-
-```bash
-git commit -m "Added new feature"
-```
-
-4. Push branch
-
-```bash
-git push origin feature/new-feature
-```
-
-5. Create Pull Request
-
-
 ## 📜 License
 
 This project is licensed under the MIT License.
 
+📌 Note
+
+This project is for educational and learning purposes only.
+All music, images, and content belong to their respective owners.
 
 ## 👩‍💻 Developer
 
