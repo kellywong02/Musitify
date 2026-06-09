@@ -154,7 +154,7 @@ Coming soon...
 
 This project is licensed under the MIT License.
 
-📌 Note
+## 📌 Note
 
 This project is for educational and learning purposes only.
 All music, images, and content belong to their respective owners.
