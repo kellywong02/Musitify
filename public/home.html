@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Musitify</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo">&#127925; Musitify</div>
+    <div class="profile">
+        <div class="avatar">&#128100;</div>
+        <div id="profileName">Loading...</div>
+        <small id="profileEmail"></small>
+    </div>
+    <div class="menu" onclick="navigateHome()">&#127968; Home</div>
+    <div class="menu">&#128269; Search</div>
+    <div class="menu">&#10084; Favorites</div>
+    <div class="menu">&#128191; Playlists</div>
+    <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="main" id="homeView">
+    <div class="hero">
+        <h1>Welcome back, <span id="welcomeName"></span></h1>
+        <p>Listen to your favorite songs anytime.</p>
+    </div>
+    <section class="admin-panel" id="adminPanel" hidden>
+        <div class="admin-panel-header">
+            <h2>Upload Song</h2>
+            <p>Add a new track to Musitify</p>
+        </div>
+        <form class="admin-upload-form" id="uploadSongForm">
+            <input id="songTitleInput" name="title" placeholder="Song title" required>
+            <input id="songArtistInput" name="artist" placeholder="Artist" required>
+            <input id="songAlbumInput" name="album" placeholder="Album">
+            <input id="songDurationInput" name="duration" placeholder="Duration e.g. 3:15">
+            <input id="songCoverInput" name="cover_url" placeholder="Cover image URL">
+            <input id="songFileInput" name="audio" type="file" accept=".mp3,audio/mpeg" required>
+            <button type="submit">Upload Song</button>
+        </form>
+        <div id="uploadSongMessage"></div>
+    </section>
+    <input class="search" id="searchInput" placeholder="Search songs or artists..." oninput="filterSongs()">
+    <div class="song-grid" id="songList"></div>
+</div>
+
+<div class="main route-view" id="musicView" hidden>
+    <main class="music-route-shell">
+        <a class="back-link" href="#home" id="backLink">&#8592; Back to home</a>
+        <div class="listening-layout">
+            <section class="listening-card">
+                <img class="listening-cover" id="songCover" src="https://via.placeholder.com/300" alt="Song cover">
+                <div class="listening-eyebrow">You are listening to</div>
+                <h1 id="songTitle">Loading...</h1>
+                <div class="listening-artist" id="songArtist"></div>
+                <div class="listening-duration" id="songDuration"></div>
+                <button class="listening-play" id="musicPlayButton" type="button">&#9658;</button>
+                <div class="listening-progress">
+                    <input type="range" id="musicProgressBar" value="0" min="0" max="100">
+                    <span id="musicTimeDisplay">0:00 / 0:00</span>
+                </div>
+            </section>
+            <section class="upcoming-card">
+                <h2>Upcoming Songs</h2>
+                <div id="upcomingList"></div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div class="player" id="persistentPlayer">
+    <div class="now-playing">
+        <div class="now-title" id="nowTitle">No song selected</div>
+        <div class="now-artist" id="nowArtist">Choose a song to play</div>
+    </div>
+    <audio id="audioPlayer" controlsList="nodownload noplaybackrate" disableRemotePlayback oncontextmenu="return false;" hidden></audio>
+    <div class="custom-player">
+        <button onclick="togglePlay()" id="playPauseBtn">&#9658;</button>
+        <input type="range" id="progressBar" value="0" min="0" max="100" oninput="seekSongFromFooter()">
+        <span id="timeDisplay">0:00 / 0:00</span>
+    </div>
+</div>
+
+<script>
+const playbackStateKey = 'musitifyPlaybackState';
+const routeHome = '#home';
+const routeMusic = '#music';
+let currentUser = null;
+
+let allSongs = [];
+let filteredSongs = [];
+let currentSong = null;
+let currentSongIndex = -1;
+
+const audio = document.getElementById('audioPlayer');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const progressBar = document.getElementById('progressBar');
+const timeDisplay = document.getElementById('timeDisplay');
+const musicPlayButton = document.getElementById('musicPlayButton');
+const musicProgressBar = document.getElementById('musicProgressBar');
+const musicTimeDisplay = document.getElementById('musicTimeDisplay');
+
+async function initializeApp() {
+    loadProfile();
+    await loadSongs();
+    restorePlaybackState();
+    bindAdminUploadForm();
+    renderRoute();
+}
+
+async function loadSongs() {
+    const response = await fetch('/songs');
+    allSongs = await response.json();
+    filteredSongs = allSongs.slice();
+    renderSongs(filteredSongs);
+}
+
+function renderSongs(songs) {
+    const container = document.getElementById('songList');
+    container.innerHTML = '';
+
+    songs.forEach(song => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.tabIndex = 0;
+        card.innerHTML = `
+            <img class="cover" src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/300')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+            <div class="song-title">${escapeHtml(formatSongTitle(song.title))}</div>
+            <div class="artist">${escapeHtml(song.artist)}</div>
+            <div class="duration">${escapeHtml(song.duration || '')}</div>
+            <button class="play-btn" type="button">&#9658; Play</button>
+        `;
+
+        card.addEventListener('click', () => openSong(song));
+        card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openSong(song);
+            }
+        });
+        card.querySelector('.play-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            openSong(song);
+        });
+        container.appendChild(card);
+    });
+}
+
+function openSong(song) {
+    currentSong = song;
+    currentSongIndex = getSongIndex(song);
+    loadSongIntoUi(song);
+    navigateMusic();
+    startPlayback();
+}
+
+function loadSongIntoUi(song) {
+    currentSong = song;
+    currentSongIndex = getSongIndex(song);
+
+    document.getElementById('nowTitle').innerText = formatSongTitle(song.title);
+    document.getElementById('nowArtist').innerText = song.artist;
+    document.getElementById('songCover').src = song.cover_url || 'https://via.placeholder.com/300';
+    document.getElementById('songCover').alt = `${formatSongTitle(song.title)} cover`;
+    document.getElementById('songTitle').innerText = formatSongTitle(song.title);
+    document.getElementById('songArtist').innerText = song.artist;
+    document.getElementById('songDuration').innerText = song.duration || '';
+
+    if (audio.src !== song.file_url) {
+        audio.src = song.file_url;
+        audio.load();
+    }
+
+    localStorage.setItem('selectedSong', JSON.stringify(song));
+    renderUpcomingSongs();
+}
+
+function renderUpcomingSongs() {
+    const upcomingList = document.getElementById('upcomingList');
+    upcomingList.innerHTML = '';
+
+    if (!currentSong) {
+        return;
+    }
+
+    const upcomingSongs = [
+        ...allSongs.slice(currentSongIndex + 1),
+        ...allSongs.slice(0, currentSongIndex)
+    ].filter(song => String(song.id) !== String(currentSong.id));
+
+    upcomingSongs.forEach(song => {
+        const button = document.createElement('button');
+        button.className = 'upcoming-song';
+        button.type = 'button';
+        button.innerHTML = `
+            <img src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/80')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+            <div>
+                <div class="upcoming-title">${escapeHtml(formatSongTitle(song.title))}</div>
+                <div class="upcoming-artist">${escapeHtml(song.artist)}</div>
+            </div>
+        `;
+        button.addEventListener('click', () => {
+            loadSongIntoUi(song);
+            startPlayback();
+        });
+        upcomingList.appendChild(button);
+    });
+}
+
+function startPlayback() {
+    if (!currentSong || !currentSong.file_url) {
+        return;
+    }
+
+    audio.play().then(() => {
+        updatePlayButtons(true);
+        persistPlaybackState(true);
+    }).catch(error => {
+        console.log('Audio play failed:', error);
+        updatePlayButtons(false);
+        persistPlaybackState(false);
+    });
+}
+
+function togglePlay() {
+    if (!audio.src) {
+        return;
+    }
+
+    if (audio.paused) {
+        startPlayback();
+    } else {
+        audio.pause();
+        updatePlayButtons(false);
+        persistPlaybackState(false);
+    }
+}
+
+function seekSongFromFooter() {
+    if (!audio.duration) return;
+    audio.currentTime = (progressBar.value / 100) * audio.duration;
+    persistPlaybackState(!audio.paused);
+    syncProgressUi();
+}
+
+function seekSongFromMusic() {
+    if (!audio.duration) return;
+    audio.currentTime = (musicProgressBar.value / 100) * audio.duration;
+    persistPlaybackState(!audio.paused);
+    syncProgressUi();
+}
+
+function updatePlayButtons(isPlaying) {
+    playPauseBtn.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
+    musicPlayButton.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
+}
+
+function syncProgressUi() {
+    if (!audio.duration) {
+        progressBar.value = 0;
+        musicProgressBar.value = 0;
+        timeDisplay.innerText = '0:00 / 0:00';
+        musicTimeDisplay.innerText = '0:00 / 0:00';
+        return;
+    }
+
+    const value = (audio.currentTime / audio.duration) * 100;
+    const formatted = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    progressBar.value = value;
+    musicProgressBar.value = value;
+    timeDisplay.innerText = formatted;
+    musicTimeDisplay.innerText = formatted;
+}
+
+function persistPlaybackState(isPlaying) {
+    if (!currentSong) {
+        return;
+    }
+
+    localStorage.setItem(playbackStateKey, JSON.stringify({
+        song: currentSong,
+        currentTime: audio.currentTime || 0,
+        isPlaying
+    }));
+}
+
+function restorePlaybackState() {
+    const storedSong = JSON.parse(localStorage.getItem('selectedSong') || 'null');
+    const playbackState = JSON.parse(localStorage.getItem(playbackStateKey) || 'null');
+    const sourceSong = playbackState && playbackState.song ? playbackState.song : storedSong;
+
+    if (!sourceSong) {
+        return;
+    }
+
+    const matchedSong = allSongs.find(song => String(song.id) === String(sourceSong.id));
+    if (!matchedSong) {
+        return;
+    }
+
+    loadSongIntoUi(matchedSong);
+
+    audio.addEventListener('loadedmetadata', () => {
+        if (playbackState && playbackState.currentTime && playbackState.currentTime < audio.duration) {
+            audio.currentTime = playbackState.currentTime;
+            syncProgressUi();
+        }
+    }, { once: true });
+
+    if (playbackState && playbackState.isPlaying) {
+        startPlayback();
+    } else {
+        updatePlayButtons(false);
+        syncProgressUi();
+    }
+}
+
+function navigateHome() {
+    location.hash = 'home';
+}
+
+function navigateMusic() {
+    location.hash = 'music';
+}
+
+function renderRoute() {
+    const onMusicRoute = location.hash === routeMusic;
+    document.getElementById('homeView').hidden = onMusicRoute;
+    document.getElementById('musicView').hidden = !onMusicRoute;
+    document.body.classList.toggle('music-route-active', onMusicRoute);
+
+    if (onMusicRoute && currentSong) {
+        loadSongIntoUi(currentSong);
+        syncProgressUi();
+    }
+}
+
+function filterSongs() {
+    const keyword = document.getElementById('searchInput').value.toLowerCase();
+    filteredSongs = allSongs.filter(song =>
+        song.title.toLowerCase().includes(keyword) ||
+        song.artist.toLowerCase().includes(keyword)
+    );
+    renderSongs(filteredSongs);
+}
+
+function getSongIndex(song) {
+    return allSongs.findIndex(item => String(item.id) === String(song.id));
+}
+
+function loadProfile() {
+    currentUser = JSON.parse(localStorage.getItem('user'));
+    if (!currentUser) {
+        location.href = 'login.html';
+        return;
+    }
+
+    document.getElementById('profileName').innerText = formatDisplayName(currentUser.username);
+    document.getElementById('profileEmail').innerText = currentUser.email;
+    document.getElementById('welcomeName').innerText = formatDisplayName(currentUser.username);
+    document.getElementById('adminPanel').hidden = currentUser.role !== 'admin';
+}
+
+function logout() {
+    audio.pause();
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedSong');
+    localStorage.removeItem(playbackStateKey);
+    location.href = 'login.html';
+}
+
+function bindAdminUploadForm() {
+    const form = document.getElementById('uploadSongForm');
+    if (!form) {
+        return;
+    }
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (!currentUser || currentUser.role !== 'admin') {
+            return;
+        }
+
+        const message = document.getElementById('uploadSongMessage');
+        const formData = new FormData(form);
+        formData.append('user_id', currentUser.id);
+
+        try {
+            const response = await fetch('/songs', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                message.className = 'error';
+                message.innerText = data.message;
+                return;
+            }
+
+            message.className = 'success';
+            message.innerText = 'Song uploaded successfully.';
+            form.reset();
+            await loadSongs();
+        } catch (error) {
+            message.className = 'error';
+            message.innerText = 'Unable to upload song right now.';
+        }
+    });
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    })[character]);
+}
+
+function formatSongTitle(title) {
+    return String(title ?? '').toUpperCase();
+}
+
+function formatDisplayName(name) {
+    return String(name ?? '').toUpperCase();
+}
+
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
+}
+
+audio.addEventListener('timeupdate', () => {
+    syncProgressUi();
+    persistPlaybackState(!audio.paused);
+});
+
+audio.addEventListener('ended', () => {
+    if (!allSongs.length || currentSongIndex === -1) {
+        updatePlayButtons(false);
+        return;
+    }
+
+    currentSongIndex = (currentSongIndex + 1) % allSongs.length;
+    const nextSong = allSongs[currentSongIndex];
+    loadSongIntoUi(nextSong);
+    startPlayback();
+});
+
+window.addEventListener('hashchange', renderRoute);
+document.getElementById('musicPlayButton').addEventListener('click', togglePlay);
+document.getElementById('musicProgressBar').addEventListener('input', seekSongFromMusic);
+
+if (!location.hash) {
+    location.hash = 'home';
+}
+
+initializeApp();
+</script>
+</body>
+</html>

@@ -3,11 +3,17 @@
     "target": "ES2020",
     "module": "commonjs",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": false,
     "skipLibCheck": true,
-    "types": ["@playwright/test"]
+    "types": ["@playwright/test","node"]
   },
-  "include": ["public/tests/**/*.ts"]
+  "include": ["public/tests/**/*.ts",
+    "tests/**/*.ts",
+    "pages/**/*.ts",
+    "helpers/**/*.ts",       
+    "playwright.config.ts"
+  ]
 }

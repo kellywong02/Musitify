@@ -1,0 +1,34 @@
+import { expect, type Locator, type Page } from '@playwright/test';
+
+export class Musitify_Regiser{
+    readonly page: Page;
+  readonly RegisterPage_url = 'http://localhost:3000/register.html';
+  readonly titleRegex = 'Musitify';
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  async goto() {
+    await this.page.goto(this.RegisterPage_url);
+    const html = await this.page.content();
+    expect(html).toContain(this.titleRegex);
+  }
+
+  get Username(){
+    return this.page.getByRole('textbox', { name: 'Username' });
+  }
+
+  get EmailAddress(){
+    return this.page.getByRole('textbox', { name: 'Email Address' });
+  }
+
+  get Password(){
+    return this.page.getByRole('textbox', { name: 'Password', exact: true });
+  }
+  get CreateUserButton(){
+    return this.page.getByRole('button', { name: 'Create Account' });
+  }
+
+
+}

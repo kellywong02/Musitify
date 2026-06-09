@@ -1,5 +1,7 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { devices } from '@playwright/test';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const config: PlaywrightTestConfig = {
   testDir: 'public/tests',
@@ -16,13 +18,32 @@ const config: PlaywrightTestConfig = {
     actionTimeout: 0,
     trace: 'on-first-retry',
     baseURL: 'http://localhost:3000',
-    viewport: { width: 1280, height: 720 },
+    viewport: null,
+    launchOptions: {
+    args: ['--start-maximized'],
+  },
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    name: 'chromium',
+    use: {
+      browserName: 'chromium',
     },
+  },
+
+  {
+    name: 'firefox',
+    use: {
+      browserName: 'firefox',
+    },
+  },
+
+  {
+    name: 'webkit',
+    use: {
+      browserName: 'webkit',
+    },
+  },
   ],
 };
 

@@ -5,245 +5,12 @@
 
 <title>Musitify - Register</title>
 
-<style>
-
-:root {
-    --primary: #FF00FF;
-    --background: #100018;
-    --card: rgba(24,24,24,0.85);
-    --input: #2a1730;
-    --text: white;
-    --secondary: #b3b3b3;
-}
-
-* {
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-
-    margin:0;
-    min-height:100vh;
-
-    background:
-    radial-gradient(
-        circle at top left,
-        var(--primary),
-        transparent 35%
-    ),
-    linear-gradient(
-        135deg,
-        #050005,
-        #1a0025
-    );
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    padding:20px;
-}
-
-
-.container {
-
-    width:450px;
-
-    background:var(--card);
-
-    padding:45px;
-
-    border-radius:25px;
-
-    backdrop-filter:blur(15px);
-
-    box-shadow:
-    0 0 45px rgba(255,0,255,.35);
-
-    animation:fade .5s ease;
-
-}
-
-
-@keyframes fade {
-
-    from {
-        opacity:0;
-        transform:translateY(20px);
-    }
-
-    to {
-        opacity:1;
-        transform:translateY(0);
-    }
-
-}
-
-
-.logo {
-
-    text-align:center;
-
-    color:white;
-
-    font-size:38px;
-
-    font-weight:bold;
-
-    margin-bottom:10px;
-
-}
-
-
-.subtitle {
-
-    text-align:center;
-
-    color:var(--secondary);
-
-    margin-bottom:35px;
-
-}
-
-
-.form-group {
-
-    margin-bottom:18px;
-
-}
-
-
-input {
-
-    width:100%;
-
-    padding:15px;
-
-    border:none;
-
-    border-radius:15px;
-
-    background:var(--input);
-
-    color:white;
-
-    font-size:15px;
-
-    transition:.3s;
-
-}
-
-
-input::placeholder {
-
-    color:#aaa;
-
-}
-
-
-input:focus {
-
-    outline:none;
-
-    box-shadow:
-    0 0 15px var(--primary);
-
-}
-
-
-button {
-
-    width:100%;
-
-    padding:15px;
-
-    border:none;
-
-    border-radius:30px;
-
-    background:
-    linear-gradient(
-        90deg,
-        #ff00ff,
-        #ff66ff
-    );
-
-    color:white;
-
-    font-size:17px;
-
-    font-weight:bold;
-
-    cursor:pointer;
-
-    transition:.3s;
-
-}
-
-
-button:hover {
-
-    transform:scale(1.05);
-
-    box-shadow:
-    0 0 25px var(--primary);
-
-}
-
-
-.login-link {
-
-    text-align:center;
-
-    margin-top:25px;
-
-    color:var(--secondary);
-
-}
-
-
-.login-link a {
-
-    color:var(--primary);
-
-    text-decoration:none;
-
-    font-weight:bold;
-
-}
-
-
-#msg {
-
-    margin-top:20px;
-
-    text-align:center;
-
-    font-weight:bold;
-
-}
-
-
-.success {
-
-    color:#ff66ff;
-
-}
-
-
-.error {
-
-    color:#ff6b6b;
-
-}
-
-</style>
+<link rel="stylesheet" href="styles.css">
 
 </head>
 
 
-<body>
+<body class="auth-page register-page">
 
 
 <div class="container">
@@ -262,6 +29,7 @@ Create your account and start listening
 <div class="form-group">
 <input 
 id="username"
+required
 placeholder="Username">
 </div>
 
@@ -270,6 +38,7 @@ placeholder="Username">
 <input 
 id="email"
 type="email"
+required
 placeholder="Email Address">
 </div>
 
@@ -278,6 +47,7 @@ placeholder="Email Address">
 <input 
 id="password"
 type="password"
+required
 placeholder="Password">
 </div>
 
@@ -286,6 +56,7 @@ placeholder="Password">
 <input 
 id="confirmPassword"
 type="password"
+required
 placeholder="Confirm Password">
 </div>
 
@@ -314,16 +85,49 @@ Login
 
 
 <script>
+function getApiUrl(path) {
+    if (location.protocol === 'file:') {
+        return `http://localhost:3000${path}`;
+    }
+
+    return path;
+}
 
 async function register() {
 
 
     const message =
     document.getElementById('msg');
+    const safeUsername =
+    username.value.trim();
+    const safeEmail =
+    email.value.trim();
+    const safePassword =
+    password.value.trim();
+    const safeConfirmPassword =
+    confirmPassword.value.trim();
 
 
     if (
-        password.value !== confirmPassword.value
+        !safeUsername ||
+        !safeEmail ||
+        !safePassword ||
+        !safeConfirmPassword
+    ) {
+
+        message.className =
+        "error";
+
+        message.innerText =
+        "Please fill in all fields";
+
+        return;
+
+    }
+
+
+    if (
+        safePassword !== safeConfirmPassword
     ) {
 
         message.className =
@@ -338,8 +142,9 @@ async function register() {
 
 
 
+    try {
     const response =
-    await fetch('/register', {
+    await fetch(getApiUrl('/register'), {
 
         method:'POST',
 
@@ -350,13 +155,13 @@ async function register() {
         body:JSON.stringify({
 
             username:
-            username.value,
+            safeUsername,
 
             email:
-            email.value,
+            safeEmail,
 
             password:
-            password.value
+            safePassword
 
         })
 
@@ -400,6 +205,13 @@ async function register() {
         data.message;
 
 
+    }
+    } catch (error) {
+        message.className =
+        "error";
+
+        message.innerText =
+        "Cannot connect to the server. Open http://localhost:3000/register.html and make sure node server.js is running.";
     }
 
 
