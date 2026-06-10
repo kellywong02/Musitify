@@ -43,6 +43,12 @@ app.post('/register', async (req, res) => {
         });
     }
 
+    if (normalizedPassword.length < 8) {
+        return res.status(400).json({
+            message: 'Password must be at least 8 characters long'
+        });
+    }
+
     try {
         const { data: existingUser, error: checkError } = await supabase
             .from('users')
@@ -91,13 +97,25 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedPassword = String(password || '').trim();
+
+    if (!normalizedEmail || !normalizedPassword) {
+        return res.status(400).json({
+            message: 'Please enter email or password'
+        });
+    }
+
+    if (normalizedPassword.length < 8) {
+        return res.status(400).json({
+            message: 'Password must be at least 8 characters long'
+        });
+    }
 
     try {
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, username, email, role')
+            .select('id, username, email, password, role')
             .eq('email', normalizedEmail)
-            .eq('password', password)
             .maybeSingle();
 
         if (error) {
@@ -105,14 +123,23 @@ app.post('/login', async (req, res) => {
         }
 
         if (!user) {
+            return res.status(404).json({
+                code: 'account_not_found',
+                message: 'Account not found for this email. Do you want to register?'
+            });
+        }
+
+        if (user.password !== normalizedPassword) {
             return res.status(401).json({
                 message: 'Invalid email or password'
             });
         }
 
+        const { password: _password, ...safeUser } = user;
+
         res.json({
             message: 'Login successful',
-            user
+            user: safeUser
         });
     } catch (error) {
         console.log(error);

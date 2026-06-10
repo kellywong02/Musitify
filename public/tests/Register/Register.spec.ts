@@ -1,26 +1,36 @@
 import { test, expect } from '@playwright/test';
 import { supabase } from 'D:/Programming Projects/Musitify/helpers/db';
-import { Musitify_Login } from './pageObjects/Musitify-Login';
+import { Musitify_Register } from '../pageObjects/Musitify-Register';
 
-let LoginPage: Musitify_Login;
+let RegisterPage: Musitify_Register;
 
 test.beforeEach(async ({ page }) => {
-  LoginPage = new Musitify_Login(page);
-  await LoginPage.goto();
-  await expect(page).toHaveURL(LoginPage.LoginPage_url);
+  RegisterPage = new Musitify_Register(page);
+  await RegisterPage.goto();
+  await expect(page).toHaveURL(RegisterPage.RegisterPage_url);
 });
 
 test.afterEach(async ({ page }) => {
   await page.close();
 });
-test('Music App Login Flow', async ({ page }) => {
-  await page.goto('http://localhost:3000/login.html');
 
-  await page.fill('#email', 'admin@admin.sg');
-  await page.fill('#password', 'Admin@123');
-  await page.getByRole('button',{name:'Login'}).click();
-  await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
+test('Music App Register Flow - (Negative) Password must meet minimum length', async ({ page }) => {
+  await RegisterPage.Username.fill('Short Password User');
+  await RegisterPage.EmailAddress.fill('short-password-user@example.com');
+  await RegisterPage.Password.fill('Abc@12');
+  await RegisterPage.ConfirmPassword.fill('Abc@12');
+  await RegisterPage.ConfirmPassword.press('Enter');
+  await expect(RegisterPage.PasswordMinimumLengthError).toBeVisible();
+});
+
+test('Music App Register Flow', async ({ page }, testInfo) => {
+
+  
+  const registerSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-register-submitted.png' });
+  await testInfo.attach('Step 1 - register submitted', {
+    body: registerSubmittedScreenshot,
+    contentType: 'image/png',
+  });
   await expect(page).toHaveURL(/home.html/);
 
   await test.step('Step 2: Verify data in Supabase', async()=>{

@@ -379,6 +379,22 @@ audio {
     accent-color: #FF00FF;
 }
 
+#progressBar:disabled,
+#musicProgressBar:disabled {
+    accent-color: #555;
+    cursor: default;
+}
+
+#progressBar:disabled::-webkit-slider-thumb,
+#musicProgressBar:disabled::-webkit-slider-thumb {
+    opacity: 0;
+}
+
+#progressBar:disabled::-moz-range-thumb,
+#musicProgressBar:disabled::-moz-range-thumb {
+    opacity: 0;
+}
+
 #timeDisplay {
     color: #b3b3b3;
     font-size: 14px;

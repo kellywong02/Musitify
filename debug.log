@@ -1,0 +1,69 @@
+[0610/113934.746:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/113934.879:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114144.939:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114145.072:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114501.871:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114502.006:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114719.113:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/114719.260:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142733.706:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/142734.349:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142734.359:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142734.513:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142734.649:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142734.948:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142735.110:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142735.350:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142735.434:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142735.501:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142735.729:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142736.017:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142736.149:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142831.166:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/142831.251:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/142832.472:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/142833.367:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.416:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.549:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.552:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.561:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.797:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.936:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142833.972:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142834.098:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142834.107:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142834.476:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/142834.612:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150237.169:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150237.244:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150247.924:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150248.069:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150520.582:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150520.982:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150521.097:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150521.110:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150521.703:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0610/150523.440:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150523.573:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150523.747:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150523.881:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.007:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.118:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.467:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.675:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.690:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150524.862:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150534.655:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/150534.786:ERROR:net\socket\ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -100
+[0610/160532.806:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.808:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.808:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.
+[0610/160532.809:ERROR:gpu\command_buffer\service\shared_image\shared_image_manager.cc:386] SharedImageManager::ProduceMemory: Trying to Produce a Memory representation from a non-existent mailbox.

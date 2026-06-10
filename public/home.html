@@ -57,7 +57,7 @@
                 <div class="listening-duration" id="songDuration"></div>
                 <button class="listening-play" id="musicPlayButton" type="button">&#9658;</button>
                 <div class="listening-progress">
-                    <input type="range" id="musicProgressBar" value="0" min="0" max="100">
+                    <input type="range" id="musicProgressBar" value="0" min="0" max="100" disabled>
                     <span id="musicTimeDisplay">0:00 / 0:00</span>
                 </div>
             </section>
@@ -77,7 +77,7 @@
     <audio id="audioPlayer" controlsList="nodownload noplaybackrate" disableRemotePlayback oncontextmenu="return false;" hidden></audio>
     <div class="custom-player">
         <button onclick="togglePlay()" id="playPauseBtn">&#9658;</button>
-        <input type="range" id="progressBar" value="0" min="0" max="100" oninput="seekSongFromFooter()">
+        <input type="range" id="progressBar" value="0" min="0" max="100" oninput="seekSongFromFooter()" disabled>
         <span id="timeDisplay">0:00 / 0:00</span>
     </div>
 </div>
@@ -92,6 +92,7 @@ let allSongs = [];
 let filteredSongs = [];
 let currentSong = null;
 let currentSongIndex = -1;
+let isPlaybackActive = false;
 
 const audio = document.getElementById('audioPlayer');
 const playPauseBtn = document.getElementById('playPauseBtn');
@@ -213,11 +214,16 @@ function startPlayback() {
         return;
     }
 
+    updatePlayButtons(false);
     audio.play().then(() => {
-        updatePlayButtons(true);
-        persistPlaybackState(true);
+        if (!audio.paused) {
+            isPlaybackActive = true;
+            updatePlayButtons(true);
+            persistPlaybackState(true);
+        }
     }).catch(error => {
         console.log('Audio play failed:', error);
+        isPlaybackActive = false;
         updatePlayButtons(false);
         persistPlaybackState(false);
     });
@@ -232,22 +238,23 @@ function togglePlay() {
         startPlayback();
     } else {
         audio.pause();
+        isPlaybackActive = false;
         updatePlayButtons(false);
         persistPlaybackState(false);
     }
 }
 
 function seekSongFromFooter() {
-    if (!audio.duration) return;
+    if (!hasPlayableDuration()) return;
     audio.currentTime = (progressBar.value / 100) * audio.duration;
-    persistPlaybackState(!audio.paused);
+    persistPlaybackState(isPlaybackActive);
     syncProgressUi();
 }
 
 function seekSongFromMusic() {
-    if (!audio.duration) return;
+    if (!hasPlayableDuration()) return;
     audio.currentTime = (musicProgressBar.value / 100) * audio.duration;
-    persistPlaybackState(!audio.paused);
+    persistPlaybackState(isPlaybackActive);
     syncProgressUi();
 }
 
@@ -257,20 +264,28 @@ function updatePlayButtons(isPlaying) {
 }
 
 function syncProgressUi() {
-    if (!audio.duration) {
+    if (!hasPlayableDuration()) {
         progressBar.value = 0;
         musicProgressBar.value = 0;
+        progressBar.disabled = true;
+        musicProgressBar.disabled = true;
         timeDisplay.innerText = '0:00 / 0:00';
         musicTimeDisplay.innerText = '0:00 / 0:00';
         return;
     }
 
+    progressBar.disabled = false;
+    musicProgressBar.disabled = false;
     const value = (audio.currentTime / audio.duration) * 100;
     const formatted = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
     progressBar.value = value;
     musicProgressBar.value = value;
     timeDisplay.innerText = formatted;
     musicTimeDisplay.innerText = formatted;
+}
+
+function hasPlayableDuration() {
+    return Number.isFinite(audio.duration) && audio.duration > 0;
 }
 
 function persistPlaybackState(isPlaying) {
@@ -436,11 +451,57 @@ function formatTime(seconds) {
 }
 
 audio.addEventListener('timeupdate', () => {
+    if (!isPlaybackActive && !audio.paused) {
+        return;
+    }
+
     syncProgressUi();
-    persistPlaybackState(!audio.paused);
+    persistPlaybackState(isPlaybackActive);
+});
+
+audio.addEventListener('loadstart', () => {
+    syncProgressUi();
+});
+
+audio.addEventListener('loadedmetadata', () => {
+    syncProgressUi();
+});
+
+audio.addEventListener('durationchange', () => {
+    syncProgressUi();
+});
+
+audio.addEventListener('playing', () => {
+    isPlaybackActive = true;
+    updatePlayButtons(true);
+    persistPlaybackState(true);
+});
+
+audio.addEventListener('pause', () => {
+    isPlaybackActive = false;
+    updatePlayButtons(false);
+    persistPlaybackState(false);
+});
+
+audio.addEventListener('waiting', () => {
+    isPlaybackActive = false;
+    updatePlayButtons(false);
+});
+
+audio.addEventListener('stalled', () => {
+    isPlaybackActive = false;
+    updatePlayButtons(false);
+});
+
+audio.addEventListener('error', () => {
+    isPlaybackActive = false;
+    syncProgressUi();
+    updatePlayButtons(false);
+    persistPlaybackState(false);
 });
 
 audio.addEventListener('ended', () => {
+    isPlaybackActive = false;
     if (!allSongs.length || currentSongIndex === -1) {
         updatePlayButtons(false);
         return;

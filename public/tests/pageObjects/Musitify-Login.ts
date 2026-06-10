@@ -30,6 +30,35 @@ export class Musitify_Login{
     return this.page.getByRole('link', { name: 'Register' });
   }
 
+  get InvalidEmailOrPassword(){
+    return this.page.getByText('Invalid email or password');
+  }
 
+  get MissingEmailOrPassword(){
+    return this.page.getByText('Please enter email or password');
+  }
 
+  get AccountNotFound(){
+    return this.page.getByText('Account not found for this email');
+  }
+
+  get PasswordMinimumLengthError(){
+    return this.page.getByText('Password must be at least 8 characters long');
+  }
+
+  get RegisterPrompt(){
+    return this.page.getByText('Account not found for this');
+  }
+
+  get ToRegister(){
+    return this.page.getByRole('link', { name: 'Register' });
+  }
+
+  get RegisterPage(){
+    return this.page.getByText('Create your account and start');
+  }
+
+  get PasswordMinimumCharacters(){
+    return this.page.getByText('Password must be at least 8');
+  }
 }

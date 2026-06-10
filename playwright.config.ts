@@ -9,13 +9,15 @@ const config: PlaywrightTestConfig = {
   expect: {
     timeout: 5000,
   },
+
   fullyParallel: true,
   forbidOnly: process.env.CI === 'true',
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['list']],
+  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
   use: {
     actionTimeout: 0,
+    screenshot: 'on',
     trace: 'on-first-retry',
     baseURL: 'http://localhost:3000',
     viewport: null,
@@ -44,6 +46,8 @@ const config: PlaywrightTestConfig = {
       browserName: 'webkit',
     },
   },
+
+  
   ],
 };
 

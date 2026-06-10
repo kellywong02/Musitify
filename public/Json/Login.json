@@ -1,0 +1,12 @@
+[
+  {
+    "role": "Admin",
+    "email": "admin@admin.sg",
+    "password": "Admin@123"
+  },
+  {
+    "role": "Normal User",
+    "email": "user1",
+    "password": "Password"
+  }
+]

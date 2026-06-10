@@ -8,13 +8,15 @@
 <div class="container">
 <div class="logo">🎵 Musitify</div>
 <div class="subtitle">Login and continue listening</div>
+<form id="loginForm">
 <div class="form-group">
-<input id="email" placeholder="Email Address">
+<input id="email" type="email" placeholder="Email Address">
 </div>
 <div class="form-group">
 <input id="password" type="password" placeholder="Password">
 </div>
-<button onclick="login()">Login</button>
+<button type="submit">Login</button>
+</form>
 <p>Don't have an account? <a href="register.html">Register</a></p>
 <div id="msg"></div>
 </div>
@@ -29,6 +31,20 @@ function getApiUrl(path) {
 
 async function login() {
     const message = document.getElementById("msg");
+    const safeEmail = email.value.trim();
+    const safePassword = password.value.trim();
+
+    if (!safeEmail || !safePassword) {
+        message.className = "error";
+        message.innerText = "Please enter email or password";
+        return;
+    }
+
+    if (safePassword.length < 8) {
+        message.className = "error";
+        message.innerText = "Password must be at least 8 characters long";
+        return;
+    }
 
     try {
         const res = await fetch(getApiUrl('/login'), {
@@ -37,8 +53,8 @@ async function login() {
                 'Content-Type':'application/json'
             },
             body:JSON.stringify({
-                email: email.value,
-                password: password.value
+                email: safeEmail,
+                password: safePassword
             })
         });
         const data = await res.json();
@@ -47,13 +63,22 @@ async function login() {
             sessionStorage.removeItem("musitifyAutoplayNextPage");
             localStorage.setItem("user", JSON.stringify(data.user));
             location.href = "home.html";
+        } else if (data.code === 'account_not_found') {
+            message.className = "error";
+            message.innerHTML = 'Account not found for this email. Do you want to <a href="register.html">register</a>?';
         } else {
+            message.className = "error";
             message.innerText = data.message;
         }
     } catch (error) {
         message.innerText = "Cannot connect to the server. Open http://localhost:3000/login.html and make sure node server.js is running.";
     }
 }
+
+document.getElementById('loginForm').addEventListener('submit', event => {
+    event.preventDefault();
+    login();
+});
 </script>
 </body>
 </html>

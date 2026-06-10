@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
-export class Musitify_Regiser{
+export class Musitify_Register{
     readonly page: Page;
   readonly RegisterPage_url = 'http://localhost:3000/register.html';
   readonly titleRegex = 'Musitify';
@@ -26,8 +26,17 @@ export class Musitify_Regiser{
   get Password(){
     return this.page.getByRole('textbox', { name: 'Password', exact: true });
   }
+
+  get ConfirmPassword(){
+    return this.page.getByRole('textbox', { name: 'Confirm Password' });
+  }
+
   get CreateUserButton(){
     return this.page.getByRole('button', { name: 'Create Account' });
+  }
+
+  get PasswordMinimumLengthError(){
+    return this.page.getByText('Password must be at least 8 characters long');
   }
 
 
