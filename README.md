@@ -14,6 +14,50 @@ Users can discover songs, browse artists and albums, and enjoy a smooth music pl
 - 📱 Responsive UI design
 - ☁️ Cloud-based music storage
 
+# 🎴 Photocard Lucky Draw System
+
+Musitify includes a K-pop inspired collectible photocard system.
+
+Users can perform lucky draws and collect virtual photocards from different artists, albums, and eras.
+
+## Features
+
+- 🎁 Random photocard draw
+- 📚 Personal photocard collection
+- 🌈 Different card rarity levels
+- ⭐ Rare animated cards
+- 💎 Limited edition cards
+
+
+---
+
+## 🃏 Card Rarity
+
+| Rarity | Symbol | Drop Rate |
+|---|---|---:|
+| Normal | ⚪ N | 60% |
+| Rare | 🔵 R | 25% |
+| Super Rare | 🟣 SR | 10% |
+| Ultra Rare | 🟡 UR | 4% |
+| Legendary | 🌈 LR | 1% |
+
+
+Example Card:
+
+```json
+{
+  "card_name": "IVE Wonyoung SWITCH Card",
+  "artist": "IVE",
+  "member": "Jang Wonyoung",
+  "album": "IVE SWITCH",
+  "rarity": "Ultra Rare",
+  "image_url": "wonyoung-card.jpg"
+}
+```
+
+---
+
+
 ## 🛠️ Tech Stack
 
 ### Frontend
