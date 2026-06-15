@@ -61,4 +61,10 @@ export class Musitify_Login{
   get PasswordMinimumCharacters(){
     return this.page.getByText('Password must be at least 8');
   }
+
+  async login(email: string, password: string) {
+    await this.EmailAddress.fill(email);
+    await this.Password.fill(password);
+    await this.LoginButton.click();
+  }
 }

@@ -1,26 +1,22 @@
-import { test, expect } from '@playwright/test';
-import { supabase } from 'D:/Programming Projects/Musitify/helpers/db';
-import { Musitify_Register } from '../pageObjects/Musitify-Register';
+import { test, expect } from '../fixtures/pageFixtures';
+import { supabase } from '../../../helpers/db';
 
-let RegisterPage: Musitify_Register;
-
-test.beforeEach(async ({ page }) => {
-  RegisterPage = new Musitify_Register(page);
-  await RegisterPage.goto();
-  await expect(page).toHaveURL(RegisterPage.RegisterPage_url);
+test.beforeEach(async ({ page, registerPage }) => {
+  await registerPage.goto();
+  await expect(page).toHaveURL(registerPage.RegisterPage_url);
 });
 
 test.afterEach(async ({ page }) => {
   await page.close();
 });
 
-test('Music App Register Flow - (Negative) Password must meet minimum length', async ({ page }) => {
-  await RegisterPage.Username.fill('Short Password User');
-  await RegisterPage.EmailAddress.fill('short-password-user@example.com');
-  await RegisterPage.Password.fill('Abc@12');
-  await RegisterPage.ConfirmPassword.fill('Abc@12');
-  await RegisterPage.ConfirmPassword.press('Enter');
-  await expect(RegisterPage.PasswordMinimumLengthError).toBeVisible();
+test('Music App Register Flow - (Negative) Password must meet minimum length', async ({ registerPage }) => {
+  await registerPage.Username.fill('Short Password User');
+  await registerPage.EmailAddress.fill('short-password-user@example.com');
+  await registerPage.Password.fill('Abc@12');
+  await registerPage.ConfirmPassword.fill('Abc@12');
+  await registerPage.ConfirmPassword.press('Enter');
+  await expect(registerPage.PasswordMinimumLengthError).toBeVisible();
 });
 
 test('Music App Register Flow', async ({ page }, testInfo) => {

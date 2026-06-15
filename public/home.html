@@ -16,6 +16,7 @@
     <div class="menu" onclick="navigateHome()">&#127968; Home</div>
     <div class="menu">&#128269; Search</div>
     <div class="menu">&#10084; Favorites</div>
+    <div class="menu" onclick="navigateLuckyDraw()">&#127873; Daily Lucky Draw</div>
     <div class="menu">&#128191; Playlists</div>
     <button class="logout" onclick="logout()">Logout</button>
 </div>
@@ -43,6 +44,35 @@
     </section>
     <input class="search" id="searchInput" placeholder="Search songs or artists..." oninput="filterSongs()">
     <div class="song-grid" id="songList"></div>
+</div>
+
+<div class="main route-view" id="luckyDrawView" hidden>
+    <section class="lucky-draw-hero">
+        <div>
+            <p class="lucky-eyebrow">Daily Photocard</p>
+            <h1>Lucky Draw</h1>
+            <p>Draw one random photocard per day and build your collection.</p>
+        </div>
+        <button id="dailyDrawButton" type="button">Daily Lucky Draw</button>
+    </section>
+    <div id="dailyDrawMessage" class="daily-draw-message"></div>
+    <section class="collection-section">
+        <h2>My Collection</h2>
+        <div class="photocard-grid" id="photocardCollection"></div>
+    </section>
+</div>
+
+<div class="main route-view" id="photocardView" hidden>
+    <a class="back-link" href="#lucky-draw">&#8592; Back to collection</a>
+    <section class="photocard-detail" id="photocardDetail"></section>
+</div>
+
+<div class="photocard-modal" id="photocardModal" hidden>
+    <div class="photocard-modal-card" role="dialog" aria-modal="true" aria-labelledby="photocardModalTitle">
+        <button class="photocard-modal-close" id="photocardModalClose" type="button" aria-label="Close photocard popup">&times;</button>
+        <p class="lucky-eyebrow">You pulled</p>
+        <div id="photocardModalContent"></div>
+    </div>
 </div>
 
 <div class="main route-view" id="musicView" hidden>
@@ -86,6 +116,8 @@
 const playbackStateKey = 'musitifyPlaybackState';
 const routeHome = '#home';
 const routeMusic = '#music';
+const routeLuckyDraw = '#lucky-draw';
+const routePhotocardPrefix = '#photocard-';
 let currentUser = null;
 
 let allSongs = [];
@@ -93,6 +125,8 @@ let filteredSongs = [];
 let currentSong = null;
 let currentSongIndex = -1;
 let isPlaybackActive = false;
+let luckyDrawLoaded = false;
+let photocardDraws = [];
 
 const audio = document.getElementById('audioPlayer');
 const playPauseBtn = document.getElementById('playPauseBtn');
@@ -101,6 +135,13 @@ const timeDisplay = document.getElementById('timeDisplay');
 const musicPlayButton = document.getElementById('musicPlayButton');
 const musicProgressBar = document.getElementById('musicProgressBar');
 const musicTimeDisplay = document.getElementById('musicTimeDisplay');
+const dailyDrawButton = document.getElementById('dailyDrawButton');
+const dailyDrawMessage = document.getElementById('dailyDrawMessage');
+const photocardCollection = document.getElementById('photocardCollection');
+const photocardDetail = document.getElementById('photocardDetail');
+const photocardModal = document.getElementById('photocardModal');
+const photocardModalContent = document.getElementById('photocardModalContent');
+const photocardModalClose = document.getElementById('photocardModalClose');
 
 async function initializeApp() {
     loadProfile();
@@ -131,6 +172,7 @@ function renderSongs(songs) {
             <div class="artist">${escapeHtml(song.artist)}</div>
             <div class="duration">${escapeHtml(song.duration || '')}</div>
             <button class="play-btn" type="button">&#9658; Play</button>
+            ${isCurrentUserAdmin() ? '<button class="remove-song-btn" type="button">Remove Song</button>' : ''}
         `;
 
         card.addEventListener('click', () => openSong(song));
@@ -144,8 +186,60 @@ function renderSongs(songs) {
             event.stopPropagation();
             openSong(song);
         });
+        const removeButton = card.querySelector('.remove-song-btn');
+        if (removeButton) {
+            removeButton.addEventListener('click', event => {
+                event.stopPropagation();
+                removeSong(song);
+            });
+        }
         container.appendChild(card);
     });
+}
+
+async function removeSong(song) {
+    if (!isCurrentUserAdmin()) {
+        return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to remove this song?');
+    if (!confirmed) {
+        return;
+    }
+
+    const response = await fetch(`/songs/${song.id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            user_id: currentUser.id
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({
+            message: 'Unable to remove song right now.'
+        }));
+        console.log(error.message);
+        return;
+    }
+
+    if (currentSong && String(currentSong.id) === String(song.id)) {
+        audio.pause();
+        audio.removeAttribute('src');
+        currentSong = null;
+        currentSongIndex = -1;
+        isPlaybackActive = false;
+        localStorage.removeItem('selectedSong');
+        localStorage.removeItem(playbackStateKey);
+        document.getElementById('nowTitle').innerText = 'No song selected';
+        document.getElementById('nowArtist').innerText = 'Choose a song to play';
+        updatePlayButtons(false);
+        syncProgressUi();
+    }
+
+    await loadSongs();
 }
 
 function openSong(song) {
@@ -339,16 +433,242 @@ function navigateMusic() {
     location.hash = 'music';
 }
 
+function navigateLuckyDraw() {
+    location.hash = 'lucky-draw';
+}
+
 function renderRoute() {
     const onMusicRoute = location.hash === routeMusic;
-    document.getElementById('homeView').hidden = onMusicRoute;
+    const onLuckyDrawRoute = location.hash === routeLuckyDraw;
+    const onPhotocardRoute = location.hash.startsWith(routePhotocardPrefix);
+    document.getElementById('homeView').hidden = onMusicRoute || onLuckyDrawRoute || onPhotocardRoute;
     document.getElementById('musicView').hidden = !onMusicRoute;
+    document.getElementById('luckyDrawView').hidden = !onLuckyDrawRoute;
+    document.getElementById('photocardView').hidden = !onPhotocardRoute;
     document.body.classList.toggle('music-route-active', onMusicRoute);
 
     if (onMusicRoute && currentSong) {
         loadSongIntoUi(currentSong);
         syncProgressUi();
     }
+
+    if (onLuckyDrawRoute) {
+        loadLuckyDrawState();
+    }
+
+    if (onPhotocardRoute) {
+        renderPhotocardDetailRoute();
+    }
+}
+
+async function loadLuckyDrawState() {
+    if (!currentUser || luckyDrawLoaded) {
+        return;
+    }
+
+    luckyDrawLoaded = true;
+    dailyDrawMessage.innerText = 'Loading your collection...';
+
+    try {
+        const response = await fetch(`/photocards/collection?user_id=${encodeURIComponent(currentUser.id)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            dailyDrawMessage.innerText = data.message || 'Unable to load Lucky Draw right now.';
+            return;
+        }
+
+        renderLuckyDrawState(data);
+    } catch (error) {
+        dailyDrawMessage.innerText = 'Unable to load Lucky Draw right now.';
+    }
+}
+
+async function dailyLuckyDraw() {
+    if (!currentUser) {
+        return;
+    }
+
+    dailyDrawButton.disabled = true;
+    dailyDrawMessage.innerText = 'Drawing your photocard...';
+
+    try {
+        const response = await fetch('/photocards/daily-draw', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: currentUser.id
+            })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            dailyDrawMessage.innerText = data.message || 'Unable to draw a photocard right now.';
+            dailyDrawButton.disabled = !isCurrentUserAdmin();
+            return;
+        }
+
+        dailyDrawMessage.innerText = data.message;
+        showPhotocardPopup(data.draw);
+        await refreshLuckyDrawState();
+    } catch (error) {
+        dailyDrawMessage.innerText = 'Unable to draw a photocard right now.';
+        dailyDrawButton.disabled = false;
+    }
+}
+
+async function refreshLuckyDrawState() {
+    luckyDrawLoaded = false;
+    await loadLuckyDrawState();
+}
+
+function renderLuckyDrawState(data) {
+    const isAdmin = isCurrentUserAdmin();
+    dailyDrawButton.disabled = isAdmin ? false : !data.canDrawToday;
+    if (isAdmin) {
+        dailyDrawMessage.innerText = 'Admin mode: Unlimited Lucky Draw is available.';
+    } else {
+        dailyDrawMessage.innerText = data.canDrawToday
+            ? 'You can draw one photocard today.'
+            : 'You already used your Daily Lucky Draw today. Come back tomorrow.';
+    }
+
+    renderPhotocardCollection(data.collection || []);
+}
+
+function showPhotocardPopup(draw) {
+    if (!draw || !draw.photocard) {
+        return;
+    }
+
+    const card = draw.photocard;
+    const rarityClass = getPhotocardRarityClass(card.rarity);
+    photocardModal.querySelector('.photocard-modal-card').className = `photocard-modal-card ${rarityClass}`;
+    photocardModalContent.innerHTML = `
+        <div class="photocard-image-frame ${rarityClass}">
+            <img class="photocard-modal-image" src="${escapeHtml(card.image_url)}" alt="${escapeHtml(card.member_name)} photocard">
+        </div>
+        <div class="photocard-modal-details">
+            <span>${escapeHtml(card.rarity || 'normal')}</span>
+            <h2 id="photocardModalTitle">${escapeHtml(card.member_name)}</h2>
+            <p>${escapeHtml(card.artist)}</p>
+        </div>
+    `;
+    photocardModal.hidden = false;
+}
+
+function closePhotocardPopup() {
+    photocardModal.hidden = true;
+    photocardModalContent.innerHTML = '';
+}
+
+function renderPhotocardCollection(collection) {
+    photocardDraws = collection;
+    photocardCollection.innerHTML = '';
+
+    if (!collection.length) {
+        photocardCollection.innerHTML = '<p class="empty-collection">No photocards yet. Try your Daily Lucky Draw.</p>';
+        return;
+    }
+
+    collection.forEach(draw => {
+        const card = draw.photocard;
+        const item = document.createElement('article');
+        item.className = `photocard-card collection-photocard ${getPhotocardRarityClass(card.rarity)}`;
+        item.tabIndex = 0;
+        item.title = 'Click to view this photocard';
+        item.innerHTML = `
+            <div class="photocard-image-frame ${getPhotocardRarityClass(card.rarity)}">
+                <img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(card.member_name)} photocard">
+            </div>
+            <div class="photocard-details">
+                <span>${escapeHtml(card.rarity || 'normal')}</span>
+                <h3>${escapeHtml(card.member_name)}</h3>
+                <p>${escapeHtml(card.artist)} • ${escapeHtml(draw.drawn_date)}</p>
+            </div>
+        `;
+        item.addEventListener('click', () => {
+            openPhotocardDetail(card.id);
+        });
+        item.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openPhotocardDetail(card.id);
+            }
+        });
+        photocardCollection.appendChild(item);
+    });
+}
+
+function openPhotocardDetail(photocardId) {
+    location.hash = `photocard-${photocardId}`;
+}
+
+async function renderPhotocardDetailRoute() {
+    const photocardId = location.hash.replace(routePhotocardPrefix, '');
+
+    if (!photocardDraws.length) {
+        await loadLuckyDrawState();
+    }
+
+    const draw = photocardDraws.find(item => String(item.photocard.id) === String(photocardId));
+    if (!draw) {
+        photocardDetail.innerHTML = `
+            <section class="photocard-detail-card">
+                <h1>Photocard not found</h1>
+                <p>This photocard is not in your collection yet.</p>
+            </section>
+        `;
+        return;
+    }
+
+    const card = draw.photocard;
+    const rarityClass = getPhotocardRarityClass(card.rarity);
+    photocardDetail.innerHTML = `
+        <section class="photocard-detail-card ${rarityClass}">
+            <div class="photocard-image-frame ${rarityClass}">
+                <img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(card.member_name)} photocard">
+            </div>
+            <div class="photocard-detail-info">
+                <span>${escapeHtml(card.rarity || 'normal')}</span>
+                <h1>${escapeHtml(card.member_name)}</h1>
+                <p>${escapeHtml(card.artist)}</p>
+                <p>Collected on ${escapeHtml(draw.drawn_date)}</p>
+                <button id="downloadPhotocardButton" type="button">Download Photocard</button>
+            </div>
+        </section>
+    `;
+    document.getElementById('downloadPhotocardButton').addEventListener('click', () => {
+        downloadPhotocard(card.id);
+    });
+}
+
+function downloadPhotocard(photocardId) {
+    if (!currentUser) {
+        return;
+    }
+
+    window.location.href = `/photocards/${encodeURIComponent(photocardId)}/download?user_id=${encodeURIComponent(currentUser.id)}`;
+}
+
+function getPhotocardRarityClass(rarity) {
+    const normalizedRarity = String(rarity || 'common').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    if (normalizedRarity.includes('legend')) {
+        return 'rarity-legendary';
+    }
+
+    if (normalizedRarity.includes('ultra') || normalizedRarity.includes('super')) {
+        return 'rarity-ultra';
+    }
+
+    if (normalizedRarity.includes('rare')) {
+        return 'rarity-rare';
+    }
+
+    return 'rarity-common';
 }
 
 function filterSongs() {
@@ -374,7 +694,7 @@ function loadProfile() {
     document.getElementById('profileName').innerText = formatDisplayName(currentUser.username);
     document.getElementById('profileEmail').innerText = currentUser.email;
     document.getElementById('welcomeName').innerText = formatDisplayName(currentUser.username);
-    document.getElementById('adminPanel').hidden = currentUser.role !== 'admin';
+    document.getElementById('adminPanel').hidden = !isCurrentUserAdmin();
 }
 
 function logout() {
@@ -394,7 +714,7 @@ function bindAdminUploadForm() {
     form.addEventListener('submit', async event => {
         event.preventDefault();
 
-        if (!currentUser || currentUser.role !== 'admin') {
+        if (!isCurrentUserAdmin()) {
             return;
         }
 
@@ -442,6 +762,10 @@ function formatSongTitle(title) {
 
 function formatDisplayName(name) {
     return String(name ?? '').toUpperCase();
+}
+
+function isCurrentUserAdmin() {
+    return String(currentUser && currentUser.role || '').toLowerCase() === 'admin';
 }
 
 function formatTime(seconds) {
@@ -516,6 +840,18 @@ audio.addEventListener('ended', () => {
 window.addEventListener('hashchange', renderRoute);
 document.getElementById('musicPlayButton').addEventListener('click', togglePlay);
 document.getElementById('musicProgressBar').addEventListener('input', seekSongFromMusic);
+document.getElementById('dailyDrawButton').addEventListener('click', dailyLuckyDraw);
+photocardModalClose.addEventListener('click', closePhotocardPopup);
+photocardModal.addEventListener('click', event => {
+    if (event.target === photocardModal) {
+        closePhotocardPopup();
+    }
+});
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !photocardModal.hidden) {
+        closePhotocardPopup();
+    }
+});
 
 if (!location.hash) {
     location.hash = 'home';

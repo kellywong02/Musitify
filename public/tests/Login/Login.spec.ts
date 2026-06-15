@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { supabase } from 'D:/Programming Projects/Musitify/helpers/db';
+import { supabase } from '../../../helpers/db';
 import { Musitify_Login } from '../pageObjects/Musitify-Login';
-import User from 'D:/Programming Projects/Musitify/public/Json/Login.json'
+import User from '../../Json/Login.json'
+import { test, expect } from '../fixtures/pageFixtures';
 
 let LoginPage: Musitify_Login;
 const LoginUser = User[0];
@@ -15,6 +15,13 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => {
   await page.close();
 });
+
+test('Login Tool Shop', async ({ page, loginPage }) => {
+  await loginPage.login('admin@admin.sg', 'Admin@123');
+  await expect(page).toHaveURL(/home.html/);
+});
+
+
 //POSITIVE TESTCASES
 test('Music App Login Flow - (Positive) Login with valid email and password', async ({ page }, testInfo) => {
   
@@ -265,10 +272,5 @@ test('Password below minimum length', async ({ page }, testInfo) => {
 
   // Should show your error message
 
-
 });
-
-
-
-
 

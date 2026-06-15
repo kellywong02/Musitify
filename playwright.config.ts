@@ -15,6 +15,12 @@ const config: PlaywrightTestConfig = {
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
+  webServer: {
+    command: 'npm run start',
+    url: 'http://localhost:3000/login.html',
+    reuseExistingServer: !process.env.CI,
+    timeout: 15_000,
+  },
   use: {
     actionTimeout: 0,
     screenshot: 'on',

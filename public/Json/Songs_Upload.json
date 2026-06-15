@@ -1,0 +1,42 @@
+[
+  {
+    "Song_Title": "Baddie",
+    "Song_Artist": "IVE",
+    "Song_Album": "I'VE MINE",
+    "Song_Duration": "2:34",
+    "Song_Cover_Image_URL": "/covers/ive-mine.jpg",
+    "Song_Path": "/songs/ive-baddie.mp3"
+  },
+  {
+    "Song_Title": "Either Way",
+    "Song_Artist": "IVE",
+    "Song_Album": "I'VE MINE",
+    "Song_Duration": "2:46",
+    "Song_Cover_Image_URL": "/covers/ive-mine.jpg",
+    "Song_Path": "/songs/ive-either-way.mp3"
+  },
+  {
+    "Song_Title": "Off The Record",
+    "Song_Artist": "IVE",
+    "Song_Album": "I'VE MINE",
+    "Song_Duration": "3:08",
+    "Song_Cover_Image_URL": "/covers/ive-mine.jpg",
+    "Song_Path": "/songs/ive-off-the-record.mp3"
+  },
+  {
+    "Song_Title": "HEYA",
+    "Song_Artist": "IVE",
+    "Song_Album": "IVE SWITCH",
+    "Song_Duration": "3:09",
+    "Song_Cover_Image_URL": "/covers/ive-switch.jpg",
+    "Song_Path": "/songs/ive-heya.mp3"
+  },
+  {
+    "Song_Title": "Accendio",
+    "Song_Artist": "IVE",
+    "Song_Album": "IVE SWITCH",
+    "Song_Duration": "3:12",
+    "Song_Cover_Image_URL": "/covers/ive-switch.jpg",
+    "Song_Path": "/songs/ive-accendio.mp3"
+  }
+]
