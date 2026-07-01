@@ -73,6 +73,10 @@ export class Musitify_Playback{
   get OpenSongPlayer(): Locator{
     return this.page.getByRole('button', { name: 'Open song player' });
   }
+
+  get PlayPauseButton(): Locator{
+    return this.page.locator('#playPauseBtn');
+  }
 }
 
 function escapeRegExp(value: string): string {

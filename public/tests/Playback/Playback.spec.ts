@@ -26,11 +26,6 @@ test('Click Play on a song card updates bottom player title and artist', async (
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
-  await expect(PlayBackPage.SongPlayerTitle).toBeVisible();
-  await expect(PlayBackPage.SongPlayerTitle).toContainText(new RegExp(escapeRegExp("BANG BANG"), 'i'));
-  await expect(PlayBackPage.SongPlayerArtist).toBeVisible();
-  await expect(PlayBackPage.SongPlayerArtist).toContainText(new RegExp(escapeRegExp("IVE"), 'i'));
-  await PlayBackPage.BackToHome.click();
   await expect(PlayBackPage.BottomSongPlayerArtist).toContainText(new RegExp(escapeRegExp("IVE"), 'i'));
   await expect(PlayBackPage.BottomSongPlayerTitle).toContainText(new RegExp(escapeRegExp("BANG BANG"), 'i'));
 }); 
@@ -39,9 +34,44 @@ test('Click bottom player song info navigates to song player page', async ({ pag
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
-  await PlayBackPage.BackToHome.click();
-  
+  await PlayBackPage.OpenSongPlayer.click();
+  await expect(PlayBackPage.SongPlayerTitle).toBeVisible();
+  await expect(PlayBackPage.SongPlayerTitle).toContainText(new RegExp(escapeRegExp("BANG BANG"), 'i'));
+  await expect(PlayBackPage.SongPlayerArtist).toBeVisible();
+  await expect(PlayBackPage.SongPlayerArtist).toContainText(new RegExp(escapeRegExp("IVE"), 'i'));
+}); 
 
+test('Play/pause button toggles state ', async ({ page, PlayBackPage, loginPage }, testInfo) => {
+  await loginPage.login(NormalUser.email, NormalUser.password);
+  await expect(page).toHaveURL(/home.html/);
+  await page.evaluate(() => {
+    let isPaused = true;
+
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return isPaused;
+      }
+    });
+
+    HTMLMediaElement.prototype.play = function () {
+      isPaused = false;
+      this.dispatchEvent(new Event('playing'));
+      return Promise.resolve();
+    };
+
+    HTMLMediaElement.prototype.pause = function () {
+      isPaused = true;
+      this.dispatchEvent(new Event('pause'));
+    };
+  });
+
+  await PlayBackPage.songCardPlayButton('BANG BANG').click();
+  await expect(PlayBackPage.PlayPauseButton).toHaveText(/❚❚/);
+  await PlayBackPage.PlayPauseButton.click();
+  await expect(PlayBackPage.PlayPauseButton).toHaveText(/►/);
+  await PlayBackPage.PlayPauseButton.click();
+  await expect(PlayBackPage.PlayPauseButton).toHaveText(/❚❚/);
 }); 
 
 function escapeRegExp(value: string): string {
