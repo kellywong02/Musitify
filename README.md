@@ -136,27 +136,6 @@ Musitify - Android/
 |-- README.md
 ```
 
-## 📸 Screenshots
-
-### Login Page
-
-![Musitify login page](screenshots/readme/login.png)
-
-### Home Page
-
-![Musitify home page](screenshots/readme/home.png)
-
-### Song Player With Lyrics
-
-![Musitify song player page with lyrics](screenshots/readme/song-player.png)
-
-### Playlists Page
-
-![Musitify playlists page](screenshots/readme/playlists.png)
-
-### Daily Lucky Draw
-
-![Musitify daily lucky draw page](screenshots/readme/lucky-draw.png)
 
 ## 🔐 Environment Variables
 
