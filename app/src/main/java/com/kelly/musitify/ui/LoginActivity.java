@@ -56,13 +56,21 @@ public class LoginActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         tvMessage.setText("");
 
-        RetrofitClient.getApi().getUser(email.toLowerCase(), "*").enqueue(new Callback<List<User>>() {
+        RetrofitClient.getApi().getUser("eq." + email.toLowerCase(), "*").enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     // In real app, check password here (this is simplified as requested)
                     User user = response.body().get(0);
+                    
+                    // Save user info to SharedPreferences
+                    getSharedPreferences("Musitify", MODE_PRIVATE)
+                        .edit()
+                        .putString("user_id", user.id)
+                        .putString("role", user.role)
+                        .apply();
+
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     // Pass user info (optional, could use SharedPreferences)
                     startActivity(intent);

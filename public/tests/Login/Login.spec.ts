@@ -4,7 +4,8 @@ import User from '../../Json/Login.json'
 import { test, expect } from '../fixtures/pageFixtures';
 
 let LoginPage: Musitify_Login;
-const LoginUser = User[0];
+const NormalUser = User[1];
+const AdminUser = User[0];
 
 test.beforeEach(async ({ page }) => {
   LoginPage = new Musitify_Login(page);
@@ -23,10 +24,10 @@ test('Login Tool Shop', async ({ page, loginPage }) => {
 
 
 //POSITIVE TESTCASES
-test('Music App Login Flow - (Positive) Login with valid email and password', async ({ page }, testInfo) => {
+test('Music App Login Flow - (Positive) Login with valid email and password-Normal User', async ({ page }, testInfo) => {
   
-  await LoginPage.EmailAddress.fill(LoginUser.email);
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
@@ -35,12 +36,27 @@ test('Music App Login Flow - (Positive) Login with valid email and password', as
     contentType: 'image/png',
   });
   await expect(page).toHaveURL(/home.html/);
+  await expect(LoginPage.WelcomeBackHeading(NormalUser.username)).toBeVisible();
+}); 
 
+test('Music App Login Flow - (Positive) Login with valid email and password-Admin', async ({ page }, testInfo) => {
+  
+  await LoginPage.EmailAddress.fill(AdminUser.email);
+  await LoginPage.Password.fill(AdminUser.password);
+  await LoginPage.LoginButton.click();
+  await page.waitForLoadState('networkidle');
+  const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
+  await testInfo.attach('Step 1 - login submitted', {
+    body: loginSubmittedScreenshot,
+    contentType: 'image/png',
+  });
+  await expect(page).toHaveURL(/home.html/);
+  await expect(LoginPage.WelcomeBackHeading(AdminUser.username)).toBeVisible();
 }); 
 
 test('Music App Login Flow - (Positive) Submit login with Enter key', async ({ page }) => {
-  await LoginPage.EmailAddress.fill(LoginUser.email);
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.Password.press('Enter');
   await page.waitForLoadState('networkidle');
   await expect(page).toHaveURL(/home.html/);
@@ -48,8 +64,8 @@ test('Music App Login Flow - (Positive) Submit login with Enter key', async ({ p
 
 test('Music App Login Flow - (Positive) Login with capitalize email', async ({ page }, testInfo) => {
   
-  await LoginPage.EmailAddress.fill(LoginUser.email.toUpperCase());
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(NormalUser.email.toUpperCase());
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
@@ -67,8 +83,8 @@ test('Music App Login Flow - (Positive) Login with capitalize email', async ({ p
 
 test('Music App Login Flow - (Positive) Email with leading/trailing spaces is trimmed before login', async ({ page }, testInfo) => {
 
-  await LoginPage.EmailAddress.fill(" " + LoginUser.email + " ");
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(" " + NormalUser.email + " ");
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
@@ -85,9 +101,9 @@ test('Music App Login Flow - (Positive) Email with leading/trailing spaces is tr
 });
 
 test('Music App Login Flow - (Positive) Password with valid special characters logs in', async ({ page }, testInfo) => {
-  await LoginPage.EmailAddress.fill(LoginUser.email);
-  expect(LoginUser.password).toMatch(/[!@#$%^&*(),.?":{}|<>]/);
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
+  expect(NormalUser.password).toMatch(/[!@#$%^&*(),.?":{}|<>]/);
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
@@ -105,8 +121,8 @@ test('Music App Login Flow - (Positive) Password with valid special characters l
 
 test('Music App Login Flow - (Positive) Successful login redirects to home/dashboard page', async ({ page }, testInfo) => {
   
-  await LoginPage.EmailAddress.fill(LoginUser.email);
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
@@ -149,7 +165,7 @@ test('Music App Login Flow - (Negative) Empty email and empty password', async({
 
 test('Music App Login Flow - (Negative) Empty email field with password entered', async({ page }, testInfo)=>{
   await LoginPage.EmailAddress.fill("");
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.Password.fill(NormalUser.password);
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
   await testInfo.attach('Step 1 - login submitted', {
     body: loginSubmittedScreenshot,
@@ -161,7 +177,7 @@ test('Music App Login Flow - (Negative) Empty email field with password entered'
 });
 
 test('Music App Login Flow - (Negative) Empty password field with email entered', async({ page }, testInfo)=>{
-  await LoginPage.EmailAddress.fill(LoginUser.email);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
   await LoginPage.Password.fill("");
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
   await testInfo.attach('Step 1 - login submitted', {
@@ -226,7 +242,7 @@ test('Music App Login Flow - (Negative) Invalid email format, without .com', asy
 });
 
 test('Music App Login Flow - (Negative) Login with valid email but wrong password', async({ page }, testInfo)=>{
-  await LoginPage.EmailAddress.fill(LoginUser.email);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
   await LoginPage.Password.fill("123@Abc");
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-submitted.png' });
   await testInfo.attach('Step 1 - login submitted', {
@@ -239,7 +255,7 @@ test('Music App Login Flow - (Negative) Login with valid email but wrong passwor
 });
 
 test('Music App Login Flow - (Negative) Password must meet minimum length', async({ page }, testInfo)=>{
-  await LoginPage.EmailAddress.fill(LoginUser.email);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
   await LoginPage.Password.fill("Abc@12");
   const loginSubmittedScreenshot = await page.screenshot({ path: 'screenshots/step1-login-short-password.png' });
   await testInfo.attach('Step 1 - short password', {
@@ -252,7 +268,7 @@ test('Music App Login Flow - (Negative) Password must meet minimum length', asyn
 
 test('Music App Login Flow - (Negative) Account not found asks user to register', async({ page }, testInfo)=>{
   await LoginPage.EmailAddress.fill("new-user-not-found@example.com");
-  await LoginPage.Password.fill(LoginUser.password);
+  await LoginPage.Password.fill(NormalUser.password);
   await LoginPage.LoginButton.click();
   await page.waitForLoadState('networkidle');
   await expect (LoginPage.AccountNotFound).toBeVisible();
@@ -262,7 +278,7 @@ test('Music App Login Flow - (Negative) Account not found asks user to register'
 
 test('Password below minimum length', async ({ page }, testInfo) => {
 
-  await LoginPage.EmailAddress.fill(LoginUser.email);
+  await LoginPage.EmailAddress.fill(NormalUser.email);
   await LoginPage.Password.fill("as");
 
   await LoginPage.LoginButton.click();
@@ -271,6 +287,6 @@ test('Password below minimum length', async ({ page }, testInfo) => {
   await expect(page).toHaveURL(/login/);
 
   // Should show your error message
-
+  await LoginPage.PasswordMinimumLengthError.isVisible();
 });
 

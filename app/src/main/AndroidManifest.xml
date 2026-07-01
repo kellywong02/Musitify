@@ -10,15 +10,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Musitify">
+
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Musitify">
+            android:name=".ui.LoginActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".ui.RegisterActivity" />
+        <activity android:name=".ui.MainActivity" />
+        <activity android:name=".ui.PlayerActivity" />
+        <activity android:name=".ui.LuckyDrawActivity" />
+        <activity android:name=".ui.AddSongActivity" />
+
     </application>
 
 </manifest>

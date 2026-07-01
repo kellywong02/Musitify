@@ -1,48 +1,73 @@
 # 🎵 Musitify
 
-Musitify is a modern music streaming application inspired by Spotify.  
-Users can discover songs, browse artists and albums, and enjoy a smooth music playback experience.
+Musitify is a Spotify-inspired music web application built for self-learning and practice.
+
+The main goal of this project is to learn how to build and test a web application, especially by writing automation scripts with Playwright. It is not a commercial music streaming product and is not affiliated with Spotify or any other music platform.
+
+## 🎯 Purpose
+
+This repository is intended for:
+
+- 🎭 Practicing end-to-end test automation with Playwright
+- 🧱 Learning page object model patterns
+- 🔐 Testing login, registration, uploads, playlists, favorites, and media-player flows
+- 🗄️ Exploring frontend, backend, database, and file-upload behavior
+- ✅ Building confidence with automated browser testing in a realistic app
+
+## 📌 Disclaimer
+
+Musitify is a personal learning project. The UI and feature ideas are inspired by common music streaming applications, including Spotify-like experiences, but this project is not connected to, endorsed by, or associated with Spotify.
+
+Any music, album artwork, artist names, photocards, lyrics, or other media used in this project are for development, testing, and educational purposes only. All rights belong to their respective owners.
+
+If this repository is public, avoid committing real API keys, private credentials, copyrighted audio files, or private user data.
 
 ## ✨ Features
 
-- 🎧 Stream music online
+- 🎧 Stream and play uploaded songs
 - 🔍 Search songs and artists
-- 💿 Browse albums
+- 💿 Browse song cards with album artwork, artist, and duration
 - ❤️ Like and save favorite songs
-- ▶️ Play / pause music controls
+- 📁 Create custom playlists
+- ▶️ Play and pause music controls
 - ⏭️ Next and previous track navigation
+- 🔀 Shuffle playback
+- 🎵 Persistent bottom music player
+- 🎼 Full song player page with upcoming songs
+- 📝 Lyrics panel with API-based lyrics lookup
+- 🎤 Synced lyrics highlighting when timestamped lyrics are available
+- ☁️ Cloud-based song storage with Supabase
+- 🛠️ Admin-only song upload and removal
+- 🤖 AI chatbot with local fallback response
 - 📱 Responsive UI design
-- ☁️ Cloud-based music storage
+- 🧪 Playwright end-to-end automation tests
 
-# 🎴 Photocard Lucky Draw System
+## 🎴 Photocard Lucky Draw System
 
 Musitify includes a K-pop inspired collectible photocard system.
 
-Users can perform lucky draws and collect virtual photocards from different artists, albums, and eras.
+Users can perform daily lucky draws and collect virtual photocards from different artists, albums, and eras.
 
-## Features
+### Photocard Features
 
-- 🎁 Random photocard draw
+- 🎁 Random daily photocard draw
 - 📚 Personal photocard collection
 - 🌈 Different card rarity levels
-- ⭐ Rare animated cards
-- 💎 Limited edition cards
+- ⭐ Rare and special cards
+- 💎 Limited-edition style collectibles
+- 🔎 Photocard detail view
 
+### Card Rarity
 
----
-
-## 🃏 Card Rarity
-
-| Rarity | Symbol | Drop Rate |
+| Rarity | Symbol | Example Drop Rate |
 |---|---|---:|
-| Normal | ⚪ N | 60% |
-| Rare | 🔵 R | 25% |
-| Super Rare | 🟣 SR | 10% |
-| Ultra Rare | 🟡 UR | 4% |
-| Legendary | 🌈 LR | 1% |
+| Normal | N | 60% |
+| Rare | R | 25% |
+| Super Rare | SR | 10% |
+| Ultra Rare | UR | 4% |
+| Legendary | LR | 1% |
 
-
-Example Card:
+Example card data:
 
 ```json
 {
@@ -55,103 +80,81 @@ Example Card:
 }
 ```
 
----
-
-
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React.js
-- JavaScript
+
 - HTML5
 - CSS3
+- JavaScript
 
 ### Backend / Database
+
+- Node.js
+- Express
 - Supabase
 - PostgreSQL
 
 ### Storage
+
 - Supabase Storage
-- Firebase Storage (optional for large files)
+
+### Testing
+
+- Playwright
+- TypeScript for tests
+- Page Object Model
 
 ### Tools
+
 - Git
 - GitHub
 - VS Code
 
-
 ## 📂 Project Structure
 
-```bash
-Musitify/
-│
-├── public/
-│   └── assets/
-│
-├── src/
-│   │
-│   ├── components/
-│   │   ├── Player.jsx
-│   │   ├── Sidebar.jsx
-│   │   └── SongCard.jsx
-│   │
-│   ├── pages/
-│   │   ├── Home.jsx
-│   │   ├── Search.jsx
-│   │   └── Library.jsx
-│   │
-│   ├── services/
-│   │   └── supabase.js
-│   │
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── package.json
-└── README.md
+```text
+Musitify - Android/
+|-- public/
+|   |-- home.html
+|   |-- login.html
+|   |-- register.html
+|   |-- styles.css
+|   |-- Json/
+|   |-- tests/
+|       |-- Add Songs/
+|       |-- Login/
+|       |-- Register/
+|       |-- Remove Song/
+|       |-- fixtures/
+|       |-- pageObjects/
+|-- helpers/
+|-- server.js
+|-- playwright.config.ts
+|-- package.json
+|-- .env.example
+|-- README.md
 ```
 
-## 🗄️ Database Structure
+## 🔐 Environment Variables
 
-### Songs Table
-
-| Column | Type | Description |
-|-|-|-|
-| id | integer | Song ID |
-| title | varchar | Song title |
-| artist | varchar | Artist name |
-| album | varchar | Album name |
-| file_url | text | Music file URL |
-| cover_url | text | Album image |
-| duration | varchar | Song length |
-
+Create a `.env` file based on `.env.example`.
 
 Example:
 
-```json
-{
-  "id": 1,
-  "title": "Supernova",
-  "artist": "aespa",
-  "album": "Armageddon",
-  "file_url": "song-url.mp3",
-  "cover_url": "cover.jpg",
-  "duration": "2:58"
-}
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_SONGS_BUCKET=songs
+
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4.1-mini
 ```
+
+Do not commit your real `.env` file to GitHub.
 
 ## ⚙️ Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/Musitify.git
-```
-
-Open project:
-
-```bash
-cd Musitify
-```
 
 Install dependencies:
 
@@ -159,52 +162,72 @@ Install dependencies:
 npm install
 ```
 
-Create `.env` file:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_KEY=your_supabase_key
-```
-
-Run development server:
+Start the local server:
 
 ```bash
-npm run dev
+npm start
 ```
 
-Open:
+Open the app:
 
 ```text
-http://localhost:5173
+http://localhost:3000/login.html
 ```
 
+## 🧪 Running Playwright Tests
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Run tests in headed mode:
+
+```bash
+npm run test:headed
+```
+
+Run a specific test by title:
+
+```bash
+npx playwright test --project=chromium --grep "Add Song Successfully"
+```
+
+## 🎭 Playwright Testing Focus
+
+The test suite is used to practice automation for:
+
+- 🔐 Login and registration validation
+- 🛠️ Admin-only song uploads
+- 🗑️ Removing songs with confirmation dialogs
+- 🔎 Checking dynamic UI text
+- 🎵 Verifying song cards and player state
+- ❤️ Testing favorites and playlists
+- 📤 Handling file uploads
+- 🌐 Waiting for API responses instead of relying on fixed timeouts
+- 🧱 Using page objects for reusable locators
+
+## 🌍 Notes For Public GitHub
+
+Before making this repository public:
+
+- 🔒 Keep `.env` ignored
+- 🚫 Do not upload real private credentials
+- 🎧 Do not upload copyrighted audio files unless you have permission
+- 🖼️ Use sample/demo assets where possible
+- 📌 Make it clear that the project is for education and automation practice
 
 ## 🚀 Future Improvements
 
-- 👤 User authentication
-- 📃 Custom playlists
-- 🎤 Artist profiles
-- 🔀 Shuffle & repeat mode
-- 📥 Offline downloads
-- 🌙 Dark/light theme
-- 📱 Mobile application
-
-
-## 📸 Screenshots
-
-Coming soon...
+- 🧪 More Playwright coverage for playlists, favorites, chatbot, and lyrics
+- 🧹 Better test data cleanup
+- ✏️ Admin edit-song feature
+- 🕘 Recently played songs
+- 🔀 Playlist reorder and shuffle
+- 📺 Optional YouTube music video embed
+- 📱 Improved mobile responsiveness
 
 ## 📜 License
 
-This project is licensed under the MIT License.
-
-## 📌 Note
-
-This project is for educational and learning purposes only.
-All music, images, and content belong to their respective owners.
-
-## 👩‍💻 Developer
-
-Created by **Kelly Wong**
-
-⭐ If you like this project, consider giving it a star!
+This project is for educational and self-learning purposes. Add a license file if you plan to define formal reuse permissions.

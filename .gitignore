@@ -3,3 +3,19 @@ node_modules/
 test-results/
 playwright-report/
 screenshots/
+
+# Android
+.gradle/
+build/
+local.properties
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+*.iml
+app/build/
+*.apk
+*.aar
+*.jks

@@ -39,5 +39,11 @@ export class Musitify_Register{
     return this.page.getByText('Password must be at least 8 characters long');
   }
 
+  get MemberCreatedSuccesfully(): Locator{
+    return this.page.getByText('Registration successful!');
+  }
 
+  get UserExists(): Locator{
+    return this.page.getByText('User already exists');
+  }
 }

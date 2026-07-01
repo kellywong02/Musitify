@@ -206,6 +206,24 @@ app.post('/songs', upload.single('audio'), async (req, res) => {
             });
         }
 
+        const { data: existingSong, error: existingSongError } = await supabase
+            .from('songs')
+            .select('id')
+            .ilike('title', safeTitle)
+            .ilike('artist', safeArtist)
+            .limit(1)
+            .maybeSingle();
+
+        if (existingSongError) {
+            throw existingSongError;
+        }
+
+        if (existingSong) {
+            return res.status(409).json({
+                message: 'Song already exists'
+            });
+        }
+
         const fileName = buildSongFileName(audioFile.originalname, safeTitle);
         const { error: uploadError } = await supabase
             .storage
@@ -359,8 +377,10 @@ app.get('/photocards/collection', async (req, res) => {
 
         res.json({
             canDrawToday: userIsAdmin || !todayDraw,
-            todayDraw: todayDraw ? formatPhotocardDraw(todayDraw) : null,
-            collection: (collection || []).map(formatPhotocardDraw)
+            todayDraw: todayDraw ? formatPhotocardDraw(todayDraw, { normalizeFutureDate: userIsAdmin }) : null,
+            collection: dedupePhotocardDraws((collection || []).map(draw =>
+                formatPhotocardDraw(draw, { normalizeFutureDate: userIsAdmin })
+            ))
         });
     } catch (error) {
         console.log(error);
@@ -392,7 +412,7 @@ app.post('/photocards/daily-draw', async (req, res) => {
         if (!userIsAdmin && todayDraw) {
             return res.status(409).json({
                 message: 'You already used your Daily Lucky Draw today. Come back tomorrow.',
-                draw: formatPhotocardDraw(todayDraw)
+                draw: formatPhotocardDraw(todayDraw, { normalizeFutureDate: userIsAdmin })
             });
         }
 
@@ -405,13 +425,12 @@ app.post('/photocards/daily-draw', async (req, res) => {
         }
 
         const randomPhotocard = availablePhotocards[Math.floor(Math.random() * availablePhotocards.length)];
-        const drawDate = userIsAdmin ? await getAvailableAdminDrawDate(user.id, today) : today;
         const { data: insertedDraw, error: insertError } = await supabase
             .from('user_photocards')
             .insert([{
                 user_id: user.id,
                 photocard_id: randomPhotocard.id,
-                drawn_date: drawDate
+                drawn_date: today
             }])
             .select(`
                 id,
@@ -428,11 +447,11 @@ app.post('/photocards/daily-draw', async (req, res) => {
             .single();
 
         if (insertError) {
-            if (insertError.code === '23505' && !userIsAdmin) {
+            if (insertError.code === '23505') {
                 const existingDraw = await getUserDrawForDate(user.id, today);
                 return res.status(409).json({
                     message: 'You already used your Daily Lucky Draw today. Come back tomorrow.',
-                    draw: existingDraw ? formatPhotocardDraw(existingDraw) : null
+                    draw: existingDraw ? formatPhotocardDraw(existingDraw, { normalizeFutureDate: userIsAdmin }) : null
                 });
             }
 
@@ -441,7 +460,7 @@ app.post('/photocards/daily-draw', async (req, res) => {
 
         res.status(201).json({
             message: 'Daily Lucky Draw complete',
-            draw: formatPhotocardDraw(insertedDraw)
+            draw: formatPhotocardDraw(insertedDraw, { normalizeFutureDate: userIsAdmin })
         });
     } catch (error) {
         console.log(error);
@@ -515,6 +534,152 @@ app.get('/photocards/:id/download', async (req, res) => {
         console.log(error);
         res.status(500).json({
             message: 'Database error'
+        });
+    }
+});
+
+app.post('/chat', async (req, res) => {
+    const { message, songs = [], favorites = [], playlists = [] } = req.body;
+    const userMessage = String(message || '').trim();
+
+    if (!userMessage) {
+        return res.status(400).json({
+            reply: 'Please type a message first.'
+        });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+        return res.json({
+            reply: getLocalChatbotReply(userMessage, songs),
+            source: 'local',
+            reason: 'missing_api_key'
+        });
+    }
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/responses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+                input: [
+                    {
+                        role: 'system',
+                        content: [
+                            'You are Musitify Assistant, a concise helper inside a music web app.',
+                            'Help users with songs, favorites, playlists, uploads, shuffle, and Lucky Draw.',
+                            'Use the provided app context when relevant.',
+                            'Keep replies short and practical.'
+                        ].join(' ')
+                    },
+                    {
+                        role: 'user',
+                        content: JSON.stringify({
+                            message: userMessage,
+                            availableSongs: songs.slice(0, 30),
+                            favoriteSongs: favorites.slice(0, 30),
+                            playlists: playlists.slice(0, 20)
+                        })
+                    }
+                ]
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            console.log('OpenAI chat failed:', data);
+            return res.json({
+                reply: getLocalChatbotReply(userMessage, songs),
+                source: 'local',
+                reason: data.error?.code || data.error?.type || `openai_http_${response.status}`
+            });
+        }
+
+        const openAiReply = getOpenAiReplyText(data);
+        const usage = getOpenAiUsage(data);
+        if (openAiReply) {
+            console.log('OpenAI chat usage:', {
+                model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+                inputTokens: usage.inputTokens,
+                outputTokens: usage.outputTokens,
+                totalTokens: usage.totalTokens
+            });
+        }
+
+        res.json({
+            reply: openAiReply || getLocalChatbotReply(userMessage, songs),
+            source: openAiReply ? 'openai' : 'local',
+            reason: openAiReply ? null : 'empty_openai_reply',
+            usage: openAiReply ? usage : null
+        });
+    } catch (error) {
+        console.log('OpenAI chat failed:', error);
+        res.json({
+            reply: getLocalChatbotReply(userMessage, songs),
+            source: 'local',
+            reason: 'openai_request_failed'
+        });
+    }
+});
+
+app.get('/lyrics', async (req, res) => {
+    const title = String(req.query.title || '').trim();
+    const artist = String(req.query.artist || '').trim();
+    const album = String(req.query.album || '').trim();
+    const durationSeconds = parseDurationToSeconds(req.query.duration);
+
+    if (!title || !artist) {
+        return res.status(400).json({ lyrics: 'No song selected.' });
+    }
+
+    try {
+        const exactUrl = new URL('https://lrclib.net/api/get');
+        exactUrl.searchParams.set('track_name', title);
+        exactUrl.searchParams.set('artist_name', artist);
+        if (album) {
+            exactUrl.searchParams.set('album_name', album);
+        }
+        if (durationSeconds) {
+            exactUrl.searchParams.set('duration', String(durationSeconds));
+        }
+
+        const exactResponse = await fetch(exactUrl);
+        if (exactResponse.ok) {
+            const data = await exactResponse.json();
+            const lyrics = data.plainLyrics || data.syncedLyrics;
+            if (lyrics) {
+                return res.json({
+                    lyrics,
+                    syncedLyrics: data.syncedLyrics || '',
+                    source: 'lrclib_exact'
+                });
+            }
+        }
+
+        const searchUrl = new URL('https://lrclib.net/api/search');
+        searchUrl.searchParams.set('track_name', title);
+        searchUrl.searchParams.set('artist_name', artist);
+
+        const searchResponse = await fetch(searchUrl);
+        const results = searchResponse.ok ? await searchResponse.json() : [];
+        const matchedItem = Array.isArray(results)
+            ? results.find(item => item.plainLyrics || item.syncedLyrics)
+            : null;
+        const matchedLyrics = matchedItem ? matchedItem.plainLyrics || matchedItem.syncedLyrics : '';
+
+        return res.json({
+            lyrics: matchedLyrics || 'No lyrics found for this song.',
+            syncedLyrics: matchedItem ? matchedItem.syncedLyrics || '' : '',
+            source: matchedLyrics ? 'lrclib_search' : 'not_found'
+        });
+    } catch (error) {
+        console.log('Lyrics API failed:', error);
+        res.json({
+            lyrics: 'Unable to load lyrics right now.',
+            source: 'lyrics_request_failed'
         });
     }
 });
@@ -646,7 +811,14 @@ async function getAvailablePhotocardsForUser(userId) {
 
     const { data: ownedPhotocards, error: ownedError } = await supabase
         .from('user_photocards')
-        .select('photocard_id')
+        .select(`
+            photocard_id,
+            photocard:photocards (
+                artist,
+                member_name,
+                image_url
+            )
+        `)
         .eq('user_id', userId);
 
     if (ownedError) {
@@ -654,41 +826,193 @@ async function getAvailablePhotocardsForUser(userId) {
     }
 
     const ownedIds = new Set((ownedPhotocards || []).map(item => String(item.photocard_id)));
-    return (photocards || []).filter(card => !ownedIds.has(String(card.id)));
+    const ownedKeys = new Set((ownedPhotocards || [])
+        .filter(item => item.photocard)
+        .map(item => getPhotocardKey(item.photocard)));
+    const availablePhotocards = (photocards || []).filter(card =>
+        !ownedIds.has(String(card.id)) &&
+        !ownedKeys.has(getPhotocardKey(card))
+    );
+
+    return dedupePhotocards(availablePhotocards);
 }
 
-function formatPhotocardDraw(draw) {
+function formatPhotocardDraw(draw, options = {}) {
     return {
         id: draw.id,
-        drawn_date: draw.drawn_date,
+        drawn_date: options.normalizeFutureDate
+            ? normalizeDrawnDate(draw.drawn_date, draw.created_at)
+            : draw.drawn_date,
         created_at: draw.created_at,
         photocard: draw.photocard
     };
 }
 
+function normalizeDrawnDate(drawnDate, createdAt) {
+    const today = getTodayDate();
+    const createdDate = getDateFromTimestamp(createdAt);
+
+    if (createdDate && String(drawnDate || '') > today) {
+        return createdDate;
+    }
+
+    return drawnDate;
+}
+
+function getDateFromTimestamp(timestamp) {
+    if (!timestamp) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Singapore',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date(timestamp));
+}
+
+function dedupePhotocardDraws(draws) {
+    const seenPhotocards = new Set();
+    return draws.filter(draw => {
+        if (!draw || !draw.photocard) {
+            return false;
+        }
+
+        const key = getPhotocardKey(draw.photocard);
+        if (seenPhotocards.has(key)) {
+            return false;
+        }
+
+        seenPhotocards.add(key);
+        return true;
+    });
+}
+
+function dedupePhotocards(photocards) {
+    const seenPhotocards = new Set();
+    return photocards.filter(card => {
+        const key = getPhotocardKey(card);
+        if (seenPhotocards.has(key)) {
+            return false;
+        }
+
+        seenPhotocards.add(key);
+        return true;
+    });
+}
+
+function getPhotocardKey(card) {
+    return [
+        card.artist,
+        card.member_name,
+        card.image_url
+    ].map(value => String(value || '').trim().toLowerCase()).join('|');
+}
+
 function getTodayDate() {
-    return new Date().toISOString().slice(0, 10);
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Singapore',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date());
 }
 
 function isAdminUser(user) {
     return String(user && user.role || '').toLowerCase() === 'admin';
 }
 
-async function getAvailableAdminDrawDate(userId, startDate) {
-    const start = new Date(`${startDate}T00:00:00.000Z`);
-
-    for (let dayOffset = 0; dayOffset < 3650; dayOffset += 1) {
-        const candidate = new Date(start);
-        candidate.setUTCDate(start.getUTCDate() + dayOffset);
-        const candidateDate = candidate.toISOString().slice(0, 10);
-        const existingDraw = await getUserDrawForDate(userId, candidateDate);
-
-        if (!existingDraw) {
-            return candidateDate;
-        }
+function getOpenAiReplyText(data) {
+    if (typeof data.output_text === 'string' && data.output_text.trim()) {
+        return data.output_text.trim();
     }
 
-    return startDate;
+    if (!Array.isArray(data.output)) {
+        return '';
+    }
+
+    return data.output
+        .flatMap(item => Array.isArray(item.content) ? item.content : [])
+        .map(content => {
+            if (typeof content.text === 'string') {
+                return content.text;
+            }
+
+            if (typeof content.value === 'string') {
+                return content.value;
+            }
+
+            return '';
+        })
+        .join('\n')
+        .trim();
+}
+
+function getOpenAiUsage(data) {
+    const usage = data && data.usage || {};
+    return {
+        inputTokens: usage.input_tokens || 0,
+        outputTokens: usage.output_tokens || 0,
+        totalTokens: usage.total_tokens || 0
+    };
+}
+
+function parseDurationToSeconds(duration) {
+    const value = String(duration || '').trim();
+    if (!value) {
+        return 0;
+    }
+
+    const parts = value.split(':').map(part => Number(part));
+    if (parts.some(part => Number.isNaN(part))) {
+        return 0;
+    }
+
+    if (parts.length === 2) {
+        return (parts[0] * 60) + parts[1];
+    }
+
+    if (parts.length === 3) {
+        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+    }
+
+    return 0;
+}
+
+function getLocalChatbotReply(message, songs = []) {
+    const text = String(message || '').toLowerCase();
+
+    if (text.includes('upload')) {
+        return 'Admins can upload songs from the Upload Song form on the Home page.';
+    }
+
+    if (text.includes('favorite') || text.includes('favourite')) {
+        return 'Click the heart button on a song card to add or remove it from Favorites.';
+    }
+
+    if (text.includes('playlist')) {
+        return 'Go to Playlists, create a playlist, then use Add to Playlist on any song card.';
+    }
+
+    if (text.includes('lucky') || text.includes('photocard')) {
+        return 'Daily Lucky Draw lets you collect one random photocard each day.';
+    }
+
+    if (text.includes('recommend')) {
+        if (!songs.length) {
+            return 'I do not see any songs loaded yet.';
+        }
+
+        const song = songs[Math.floor(Math.random() * songs.length)];
+        return `Try listening to ${String(song.title || '').toUpperCase()} by ${song.artist}.`;
+    }
+
+    if (text.includes('shuffle')) {
+        return 'Use the shuffle button in the music player to randomize the upcoming songs.';
+    }
+
+    return 'I can help with uploading songs, favorites, playlists, Lucky Draw, shuffle, and song recommendations.';
 }
 
 function buildPhotocardFileName(card, extension) {
@@ -724,11 +1048,3 @@ function getImageExtension(contentType, imageUrl) {
 
     return 'jpg';
 }
-
-const path = require("path");
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});

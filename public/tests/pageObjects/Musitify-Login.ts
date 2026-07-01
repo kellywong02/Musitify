@@ -67,4 +67,8 @@ export class Musitify_Login{
     await this.Password.fill(password);
     await this.LoginButton.click();
   }
+
+  WelcomeBackHeading(username: string){
+    return this.page.getByRole('heading', { name: `Welcome back, ${username}` });
+  }
 }

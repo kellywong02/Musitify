@@ -8,14 +8,13 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
-import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 
 import com.bumptech.glide.Glide;
+import com.kelly.musitify.MusicPlayerManager;
 import com.kelly.musitify.R;
 
 public class PlayerActivity extends AppCompatActivity {
@@ -49,6 +48,7 @@ public class PlayerActivity extends AppCompatActivity {
         tvArtist.setText(artist);
         Glide.with(this).load(coverUrl).placeholder(android.R.color.darker_gray).into(ivCover);
 
+        player = MusicPlayerManager.getPlayer(this);
         setupPlayer(fileUrl);
 
         btnPlayPause.setOnClickListener(v -> {
@@ -76,12 +76,17 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void setupPlayer(String url) {
-        player = new ExoPlayer.Builder(this).build();
-        MediaItem mediaItem = MediaItem.fromUri(Uri.parse(url));
-        player.setMediaItem(mediaItem);
-        player.prepare();
-        player.play();
-        btnPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+        // Only load if it's a new song
+        MediaItem currentItem = player.getCurrentMediaItem();
+        if (currentItem == null || currentItem.localConfiguration == null || 
+            !currentItem.localConfiguration.uri.toString().equals(url)) {
+            MediaItem mediaItem = MediaItem.fromUri(Uri.parse(url));
+            player.setMediaItem(mediaItem);
+            player.prepare();
+            player.play();
+        }
+        
+        updateUI();
 
         player.addListener(new Player.Listener() {
             @Override
@@ -89,18 +94,41 @@ public class PlayerActivity extends AppCompatActivity {
                 if (state == Player.STATE_READY) {
                     seekBar.setMax((int) player.getDuration());
                     tvTotalTime.setText(formatTime(player.getDuration()));
+                }
+            }
+
+            @Override
+            public void onIsPlayingChanged(boolean isPlaying) {
+                if (isPlaying) {
+                    btnPlayPause.setImageResource(android.R.drawable.ic_media_pause);
                     updateSeekBar();
+                } else {
+                    btnPlayPause.setImageResource(android.R.drawable.ic_media_play);
                 }
             }
         });
+    }
+
+    private void updateUI() {
+        if (player.isPlaying()) {
+            btnPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+        } else {
+            btnPlayPause.setImageResource(android.R.drawable.ic_media_play);
+        }
+        
+        if (player.getDuration() > 0) {
+            seekBar.setMax((int) player.getDuration());
+            tvTotalTime.setText(formatTime(player.getDuration()));
+            updateSeekBar();
+        }
     }
 
     private void updateSeekBar() {
         if (player != null && player.isPlaying()) {
             seekBar.setProgress((int) player.getCurrentPosition());
             tvCurrentTime.setText(formatTime(player.getCurrentPosition()));
+            handler.postDelayed(this::updateSeekBar, 1000);
         }
-        handler.postDelayed(this::updateSeekBar, 1000);
     }
 
     private String formatTime(long ms) {
@@ -113,10 +141,7 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (player != null) {
-            player.release();
-            player = null;
-        }
+        // Do NOT release player here to keep it playing in background
         handler.removeCallbacksAndMessages(null);
     }
 }

@@ -15,9 +15,9 @@
     </div>
     <div class="menu" onclick="navigateHome()">&#127968; Home</div>
     <div class="menu">&#128269; Search</div>
-    <div class="menu">&#10084; Favorites</div>
+    <div class="menu" onclick="navigateFavorites()">&#10084; Favorites</div>
     <div class="menu" onclick="navigateLuckyDraw()">&#127873; Daily Lucky Draw</div>
-    <div class="menu">&#128191; Playlists</div>
+    <div class="menu" onclick="navigatePlaylists()">&#128191; Playlists</div>
     <button class="logout" onclick="logout()">Logout</button>
 </div>
 
@@ -31,7 +31,7 @@
             <h2>Upload Song</h2>
             <p>Add a new track to Musitify</p>
         </div>
-        <form class="admin-upload-form" id="uploadSongForm">
+        <form class="admin-upload-form" id="uploadSongForm" novalidate>
             <input id="songTitleInput" name="title" placeholder="Song title" required>
             <input id="songArtistInput" name="artist" placeholder="Artist" required>
             <input id="songAlbumInput" name="album" placeholder="Album">
@@ -44,6 +44,37 @@
     </section>
     <input class="search" id="searchInput" placeholder="Search songs or artists..." oninput="filterSongs()">
     <div class="song-grid" id="songList"></div>
+</div>
+
+<div class="main route-view" id="favoritesView" hidden>
+    <section class="favorites-header">
+        <div>
+            <p class="favorites-eyebrow">Your Library</p>
+            <h1>Favorites</h1>
+        </div>
+    </section>
+    <div class="song-grid" id="favoriteSongList"></div>
+</div>
+
+<div class="main route-view" id="playlistsView" hidden>
+    <section class="playlist-header">
+        <div>
+            <p class="playlist-eyebrow">Your Library</p>
+            <h1>Playlists</h1>
+        </div>
+        <form class="playlist-create-form" id="playlistCreateForm">
+            <input id="playlistNameInput" name="playlistName" placeholder="New playlist name" required>
+            <button type="submit">Create Playlist</button>
+        </form>
+    </section>
+    <div class="playlist-layout">
+        <section class="playlist-list-panel">
+            <div id="playlistList"></div>
+        </section>
+        <section class="playlist-detail-panel">
+            <div id="playlistDetail"></div>
+        </section>
+    </div>
 </div>
 
 <div class="main route-view" id="luckyDrawView" hidden>
@@ -75,6 +106,19 @@
     </div>
 </div>
 
+<div class="playlist-modal" id="playlistModal" hidden>
+    <div class="playlist-modal-card" role="dialog" aria-modal="true" aria-labelledby="playlistModalTitle">
+        <button class="playlist-modal-close" id="playlistModalClose" type="button" aria-label="Close playlist popup">&times;</button>
+        <h2 id="playlistModalTitle">Add to Playlist</h2>
+        <div id="playlistModalSong"></div>
+        <form class="playlist-create-form compact" id="playlistModalCreateForm">
+            <input id="playlistModalNameInput" name="playlistName" placeholder="New playlist name">
+            <button type="submit">Create</button>
+        </form>
+        <div id="playlistModalList"></div>
+    </div>
+</div>
+
 <div class="main route-view" id="musicView" hidden>
     <main class="music-route-shell">
         <a class="back-link" href="#home" id="backLink">&#8592; Back to home</a>
@@ -85,7 +129,12 @@
                 <h1 id="songTitle">Loading...</h1>
                 <div class="listening-artist" id="songArtist"></div>
                 <div class="listening-duration" id="songDuration"></div>
-                <button class="listening-play" id="musicPlayButton" type="button">&#9658;</button>
+                <div class="listening-controls" aria-label="Music controls">
+                    <button class="listening-control" id="musicShuffleButton" type="button" aria-label="Shuffle song">&#128256;</button>
+                    <button class="listening-control" id="musicPreviousButton" type="button" aria-label="Previous song">&#9198;</button>
+                    <button class="listening-play" id="musicPlayButton" type="button" aria-label="Play or pause">&#9658;</button>
+                    <button class="listening-control" id="musicNextButton" type="button" aria-label="Next song">&#9197;</button>
+                </div>
                 <div class="listening-progress">
                     <input type="range" id="musicProgressBar" value="0" min="0" max="100" disabled>
                     <span id="musicTimeDisplay">0:00 / 0:00</span>
@@ -95,38 +144,79 @@
                 <h2>Upcoming Songs</h2>
                 <div id="upcomingList"></div>
             </section>
+            <section class="lyrics-card">
+                <h2>Lyrics</h2>
+                <div id="lyricsContent">Select a song to view lyrics.</div>
+            </section>
         </div>
     </main>
 </div>
 
 <div class="player" id="persistentPlayer">
-    <div class="now-playing">
-        <div class="now-title" id="nowTitle">No song selected</div>
-        <div class="now-artist" id="nowArtist">Choose a song to play</div>
+    <div class="now-playing" id="nowPlayingLink" role="button" tabindex="0" aria-label="Open song player">
+        <img class="now-cover" id="nowCover" src="https://via.placeholder.com/80" alt="Song cover">
+        <div>
+            <div class="now-title" id="nowTitle">No song selected</div>
+            <div class="now-artist" id="nowArtist">Choose a song to play</div>
+        </div>
     </div>
     <audio id="audioPlayer" controlsList="nodownload noplaybackrate" disableRemotePlayback oncontextmenu="return false;" hidden></audio>
     <div class="custom-player">
+        <button onclick="playRandomSong()" id="shuffleBtn" aria-label="Shuffle song">&#128256;</button>
+        <button onclick="playPreviousSong()" id="previousBtn" aria-label="Previous song">&#9198;</button>
         <button onclick="togglePlay()" id="playPauseBtn">&#9658;</button>
+        <button onclick="playNextSong()" id="nextBtn" aria-label="Next song">&#9197;</button>
         <input type="range" id="progressBar" value="0" min="0" max="100" oninput="seekSongFromFooter()" disabled>
         <span id="timeDisplay">0:00 / 0:00</span>
     </div>
 </div>
+<button class="chatbot-toggle" id="chatbotToggle" type="button">AI</button>
+<div class="chatbot-panel" id="chatbotPanel" hidden>
+  <div class="chatbot-header">
+    <strong>Musitify Assistant</strong>
+    <button id="chatbotClose" type="button">&times;</button>
+  </div>
 
+  <div class="chatbot-messages" id="chatbotMessages"></div>
+
+  <form class="chatbot-form" id="chatbotForm">
+    <input id="chatbotInput" placeholder="Ask about songs, playlists, lucky draw..." autocomplete="off">
+    <button type="submit">Send</button>
+  </form>
+</div>
 <script>
 const playbackStateKey = 'musitifyPlaybackState';
+const favoriteSongsKeyPrefix = 'musitifyFavoriteSongs';
+const playlistsKeyPrefix = 'musitifyPlaylists';
 const routeHome = '#home';
 const routeMusic = '#music';
+const routeFavorites = '#favorites';
+const routePlaylists = '#playlists';
 const routeLuckyDraw = '#lucky-draw';
 const routePhotocardPrefix = '#photocard-';
+const chatbotToggle = document.getElementById('chatbotToggle');
+const chatbotPanel = document.getElementById('chatbotPanel');
+const chatbotClose = document.getElementById('chatbotClose');
+const chatbotMessages = document.getElementById('chatbotMessages');
+const chatbotForm = document.getElementById('chatbotForm');
+const chatbotInput = document.getElementById('chatbotInput');
 let currentUser = null;
 
 let allSongs = [];
 let filteredSongs = [];
+let playbackQueue = [];
 let currentSong = null;
 let currentSongIndex = -1;
 let isPlaybackActive = false;
 let luckyDrawLoaded = false;
 let photocardDraws = [];
+let selectedPlaylistId = null;
+let songPendingPlaylistAdd = null;
+let syncedLyricsLines = [];
+let activeLyricIndex = -1;
+let lyricsRequestId = 0;
+let lyricsPreloadStarted = false;
+const lyricsCache = new Map();
 
 const audio = document.getElementById('audioPlayer');
 const playPauseBtn = document.getElementById('playPauseBtn');
@@ -142,12 +232,23 @@ const photocardDetail = document.getElementById('photocardDetail');
 const photocardModal = document.getElementById('photocardModal');
 const photocardModalContent = document.getElementById('photocardModalContent');
 const photocardModalClose = document.getElementById('photocardModalClose');
+const playlistCreateForm = document.getElementById('playlistCreateForm');
+const playlistNameInput = document.getElementById('playlistNameInput');
+const playlistList = document.getElementById('playlistList');
+const playlistDetail = document.getElementById('playlistDetail');
+const playlistModal = document.getElementById('playlistModal');
+const playlistModalClose = document.getElementById('playlistModalClose');
+const playlistModalSong = document.getElementById('playlistModalSong');
+const playlistModalCreateForm = document.getElementById('playlistModalCreateForm');
+const playlistModalNameInput = document.getElementById('playlistModalNameInput');
+const playlistModalList = document.getElementById('playlistModalList');
 
 async function initializeApp() {
     loadProfile();
     await loadSongs();
     restorePlaybackState();
     bindAdminUploadForm();
+    bindPlaylistForms();
     renderRoute();
 }
 
@@ -155,7 +256,11 @@ async function loadSongs() {
     const response = await fetch('/songs');
     allSongs = await response.json();
     filteredSongs = allSongs.slice();
+    if (!playbackQueue.length) {
+        playbackQueue = allSongs.slice();
+    }
     renderSongs(filteredSongs);
+    preloadLyricsForSongs(allSongs);
 }
 
 function renderSongs(songs) {
@@ -163,15 +268,20 @@ function renderSongs(songs) {
     container.innerHTML = '';
 
     songs.forEach(song => {
+        const isFavorite = isFavoriteSong(song);
         const card = document.createElement('div');
         card.className = 'song-card';
         card.tabIndex = 0;
         card.innerHTML = `
-            <img class="cover" src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/300')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+            <div class="cover-wrap">
+                <img class="cover" src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/300')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+                <button class="favorite-song-btn ${isFavorite ? 'active' : ''}" type="button" aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-pressed="${isFavorite}">${isFavorite ? '&#10084;' : '&#9825;'}</button>
+            </div>
             <div class="song-title">${escapeHtml(formatSongTitle(song.title))}</div>
             <div class="artist">${escapeHtml(song.artist)}</div>
             <div class="duration">${escapeHtml(song.duration || '')}</div>
             <button class="play-btn" type="button">&#9658; Play</button>
+            <button class="add-playlist-btn" type="button">Add to Playlist</button>
             ${isCurrentUserAdmin() ? '<button class="remove-song-btn" type="button">Remove Song</button>' : ''}
         `;
 
@@ -184,7 +294,15 @@ function renderSongs(songs) {
         });
         card.querySelector('.play-btn').addEventListener('click', event => {
             event.stopPropagation();
-            openSong(song);
+            playSongFromCard(song);
+        });
+        card.querySelector('.favorite-song-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            toggleFavoriteSong(song);
+        });
+        card.querySelector('.add-playlist-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            openPlaylistModal(song);
         });
         const removeButton = card.querySelector('.remove-song-btn');
         if (removeButton) {
@@ -197,35 +315,94 @@ function renderSongs(songs) {
     });
 }
 
+function renderFavoriteSongs() {
+    const container = document.getElementById('favoriteSongList');
+    const favoriteSongs = allSongs.filter(isFavoriteSong);
+    container.innerHTML = '';
+
+    if (!favoriteSongs.length) {
+        container.innerHTML = '<p class="empty-favorites">No favorite songs yet.</p>';
+        return;
+    }
+
+    favoriteSongs.forEach(song => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.tabIndex = 0;
+        card.innerHTML = `
+            <div class="cover-wrap">
+                <img class="cover" src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/300')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+                <button class="favorite-song-btn active" type="button" aria-label="Remove from favorites" aria-pressed="true">&#10084;</button>
+            </div>
+            <div class="song-title">${escapeHtml(formatSongTitle(song.title))}</div>
+            <div class="artist">${escapeHtml(song.artist)}</div>
+            <div class="duration">${escapeHtml(song.duration || '')}</div>
+            <button class="play-btn" type="button">&#9658; Play</button>
+            <button class="add-playlist-btn" type="button">Add to Playlist</button>
+        `;
+
+        card.addEventListener('click', () => openSong(song));
+        card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openSong(song);
+            }
+        });
+        card.querySelector('.play-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            playSongFromCard(song);
+        });
+        card.querySelector('.favorite-song-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            toggleFavoriteSong(song);
+        });
+        card.querySelector('.add-playlist-btn').addEventListener('click', event => {
+            event.stopPropagation();
+            openPlaylistModal(song);
+        });
+        container.appendChild(card);
+    });
+}
+
 async function removeSong(song) {
     if (!isCurrentUserAdmin()) {
         return;
     }
 
-    const confirmed = window.confirm('Are you sure you want to remove this song?');
+    const songsToRemove = allSongs.filter(item => isSameSongMetadata(item, song));
+    const confirmed = window.confirm(
+        songsToRemove.length > 1
+            ? `Remove this song and ${songsToRemove.length - 1} duplicate(s)?`
+            : 'Are you sure you want to remove this song?'
+    );
     if (!confirmed) {
         return;
     }
 
-    const response = await fetch(`/songs/${song.id}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            user_id: currentUser.id
-        })
-    });
+    for (const songToRemove of songsToRemove) {
+        const response = await fetch(`/songs/${songToRemove.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: currentUser.id
+            })
+        });
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({
-            message: 'Unable to remove song right now.'
-        }));
-        console.log(error.message);
-        return;
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({
+                message: 'Unable to remove song right now.'
+            }));
+            console.log(error.message);
+            return;
+        }
     }
 
-    if (currentSong && String(currentSong.id) === String(song.id)) {
+    const removedSongIds = new Set(songsToRemove.map(item => String(item.id)));
+    removeFavoriteSongIds([...removedSongIds]);
+    removeSongsFromPlaylists([...removedSongIds]);
+    if (currentSong && removedSongIds.has(String(currentSong.id))) {
         audio.pause();
         audio.removeAttribute('src');
         currentSong = null;
@@ -235,6 +412,8 @@ async function removeSong(song) {
         localStorage.removeItem(playbackStateKey);
         document.getElementById('nowTitle').innerText = 'No song selected';
         document.getElementById('nowArtist').innerText = 'Choose a song to play';
+        document.getElementById('nowCover').src = 'https://via.placeholder.com/80';
+        document.getElementById('nowCover').alt = 'Song cover';
         updatePlayButtons(false);
         syncProgressUi();
     }
@@ -242,7 +421,15 @@ async function removeSong(song) {
     await loadSongs();
 }
 
+function isSameSongMetadata(song, targetSong) {
+    return String(song.title || '').trim().toLowerCase() === String(targetSong.title || '').trim().toLowerCase() &&
+        String(song.artist || '').trim().toLowerCase() === String(targetSong.artist || '').trim().toLowerCase() &&
+        String(song.album || '').trim().toLowerCase() === String(targetSong.album || '').trim().toLowerCase() &&
+        String(song.duration || '').trim().toLowerCase() === String(targetSong.duration || '').trim().toLowerCase();
+}
+
 function openSong(song) {
+    playbackQueue = allSongs.slice();
     currentSong = song;
     currentSongIndex = getSongIndex(song);
     loadSongIntoUi(song);
@@ -250,17 +437,33 @@ function openSong(song) {
     startPlayback();
 }
 
+function playSongFromCard(song) {
+    playbackQueue = allSongs.slice();
+    currentSong = song;
+    currentSongIndex = getSongIndex(song);
+    loadSongIntoUi(song);
+    startPlayback();
+}
+
 function loadSongIntoUi(song) {
     currentSong = song;
     currentSongIndex = getSongIndex(song);
+    if (currentSongIndex === -1) {
+        playbackQueue = allSongs.slice();
+        currentSongIndex = getSongIndex(song);
+    }
 
     document.getElementById('nowTitle').innerText = formatSongTitle(song.title);
     document.getElementById('nowArtist').innerText = song.artist;
+    document.getElementById('nowCover').src = song.cover_url || 'https://via.placeholder.com/80';
+    document.getElementById('nowCover').alt = `${formatSongTitle(song.title)} cover`;
     document.getElementById('songCover').src = song.cover_url || 'https://via.placeholder.com/300';
     document.getElementById('songCover').alt = `${formatSongTitle(song.title)} cover`;
     document.getElementById('songTitle').innerText = formatSongTitle(song.title);
     document.getElementById('songArtist').innerText = song.artist;
     document.getElementById('songDuration').innerText = song.duration || '';
+
+    updateLyrics(song);
 
     if (audio.src !== song.file_url) {
         audio.src = song.file_url;
@@ -279,9 +482,20 @@ function renderUpcomingSongs() {
         return;
     }
 
+    let activeSongs = getPlaybackQueue();
+    let activeSongIndex = getSongIndex(currentSong);
+    if (activeSongIndex === -1) {
+        activeSongs = allSongs;
+        activeSongIndex = allSongs.findIndex(song => String(song.id) === String(currentSong.id));
+    }
+
+    if (activeSongIndex === -1) {
+        return;
+    }
+
     const upcomingSongs = [
-        ...allSongs.slice(currentSongIndex + 1),
-        ...allSongs.slice(0, currentSongIndex)
+        ...activeSongs.slice(activeSongIndex + 1),
+        ...activeSongs.slice(0, activeSongIndex)
     ].filter(song => String(song.id) !== String(currentSong.id));
 
     upcomingSongs.forEach(song => {
@@ -336,6 +550,54 @@ function togglePlay() {
         updatePlayButtons(false);
         persistPlaybackState(false);
     }
+}
+
+function playNextSong() {
+    playSongAtOffset(1);
+}
+
+function playPreviousSong() {
+    playSongAtOffset(-1);
+}
+
+function playSongAtOffset(offset) {
+    const activeSongs = getPlaybackQueue();
+    if (!activeSongs.length) {
+        return;
+    }
+
+    const baseIndex = currentSongIndex === -1 ? 0 : currentSongIndex;
+    const nextIndex = (baseIndex + offset + activeSongs.length) % activeSongs.length;
+    loadSongIntoUi(activeSongs[nextIndex]);
+    startPlayback();
+}
+
+function playRandomSong() {
+    if (!allSongs.length) {
+        return;
+    }
+
+    playbackQueue = shuffleSongs(allSongs);
+    if (currentSong && playbackQueue.length > 1 && String(playbackQueue[0].id) === String(currentSong.id)) {
+        playbackQueue.push(playbackQueue.shift());
+    }
+
+    loadSongIntoUi(playbackQueue[0]);
+    startPlayback();
+}
+
+function getPlaybackQueue() {
+    return playbackQueue.length ? playbackQueue : allSongs;
+}
+
+function shuffleSongs(songs) {
+    const shuffledSongs = songs.slice();
+    for (let index = shuffledSongs.length - 1; index > 0; index--) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffledSongs[index], shuffledSongs[randomIndex]] = [shuffledSongs[randomIndex], shuffledSongs[index]];
+    }
+
+    return shuffledSongs;
 }
 
 function seekSongFromFooter() {
@@ -433,16 +695,36 @@ function navigateMusic() {
     location.hash = 'music';
 }
 
+function openCurrentSongPlayer() {
+    if (!currentSong) {
+        return;
+    }
+
+    navigateMusic();
+}
+
+function navigateFavorites() {
+    location.hash = 'favorites';
+}
+
+function navigatePlaylists() {
+    location.hash = 'playlists';
+}
+
 function navigateLuckyDraw() {
     location.hash = 'lucky-draw';
 }
 
 function renderRoute() {
     const onMusicRoute = location.hash === routeMusic;
+    const onFavoritesRoute = location.hash === routeFavorites;
+    const onPlaylistsRoute = location.hash === routePlaylists;
     const onLuckyDrawRoute = location.hash === routeLuckyDraw;
     const onPhotocardRoute = location.hash.startsWith(routePhotocardPrefix);
-    document.getElementById('homeView').hidden = onMusicRoute || onLuckyDrawRoute || onPhotocardRoute;
+    document.getElementById('homeView').hidden = onMusicRoute || onFavoritesRoute || onPlaylistsRoute || onLuckyDrawRoute || onPhotocardRoute;
     document.getElementById('musicView').hidden = !onMusicRoute;
+    document.getElementById('favoritesView').hidden = !onFavoritesRoute;
+    document.getElementById('playlistsView').hidden = !onPlaylistsRoute;
     document.getElementById('luckyDrawView').hidden = !onLuckyDrawRoute;
     document.getElementById('photocardView').hidden = !onPhotocardRoute;
     document.body.classList.toggle('music-route-active', onMusicRoute);
@@ -454,6 +736,14 @@ function renderRoute() {
 
     if (onLuckyDrawRoute) {
         loadLuckyDrawState();
+    }
+
+    if (onFavoritesRoute) {
+        renderFavoriteSongs();
+    }
+
+    if (onPlaylistsRoute) {
+        renderPlaylists();
     }
 
     if (onPhotocardRoute) {
@@ -565,15 +855,16 @@ function closePhotocardPopup() {
 }
 
 function renderPhotocardCollection(collection) {
-    photocardDraws = collection;
+    const uniqueCollection = dedupePhotocardDraws(collection);
+    photocardDraws = uniqueCollection;
     photocardCollection.innerHTML = '';
 
-    if (!collection.length) {
+    if (!uniqueCollection.length) {
         photocardCollection.innerHTML = '<p class="empty-collection">No photocards yet. Try your Daily Lucky Draw.</p>';
         return;
     }
 
-    collection.forEach(draw => {
+    uniqueCollection.forEach(draw => {
         const card = draw.photocard;
         const item = document.createElement('article');
         item.className = `photocard-card collection-photocard ${getPhotocardRarityClass(card.rarity)}`;
@@ -600,6 +891,31 @@ function renderPhotocardCollection(collection) {
         });
         photocardCollection.appendChild(item);
     });
+}
+
+function dedupePhotocardDraws(draws) {
+    const seenPhotocards = new Set();
+    return draws.filter(draw => {
+        if (!draw || !draw.photocard) {
+            return false;
+        }
+
+        const key = getPhotocardKey(draw.photocard);
+        if (seenPhotocards.has(key)) {
+            return false;
+        }
+
+        seenPhotocards.add(key);
+        return true;
+    });
+}
+
+function getPhotocardKey(card) {
+    return [
+        card.artist,
+        card.member_name,
+        card.image_url
+    ].map(value => String(value || '').trim().toLowerCase()).join('|');
 }
 
 function openPhotocardDetail(photocardId) {
@@ -680,8 +996,305 @@ function filterSongs() {
     renderSongs(filteredSongs);
 }
 
+function toggleFavoriteSong(song) {
+    const favoriteSongIds = getFavoriteSongIds();
+    const songId = String(song.id);
+
+    if (favoriteSongIds.has(songId)) {
+        favoriteSongIds.delete(songId);
+    } else {
+        favoriteSongIds.add(songId);
+    }
+
+    saveFavoriteSongIds(favoriteSongIds);
+    renderSongs(filteredSongs);
+    renderFavoriteSongs();
+}
+
+function isFavoriteSong(song) {
+    return getFavoriteSongIds().has(String(song.id));
+}
+
+function getFavoriteSongIds() {
+    return new Set(JSON.parse(localStorage.getItem(getFavoriteSongsKey()) || '[]').map(String));
+}
+
+function saveFavoriteSongIds(favoriteSongIds) {
+    localStorage.setItem(getFavoriteSongsKey(), JSON.stringify([...favoriteSongIds]));
+}
+
+function removeFavoriteSongIds(songIds) {
+    const favoriteSongIds = getFavoriteSongIds();
+    songIds.forEach(songId => favoriteSongIds.delete(String(songId)));
+    saveFavoriteSongIds(favoriteSongIds);
+}
+
+function getFavoriteSongsKey() {
+    return `${favoriteSongsKeyPrefix}:${currentUser ? currentUser.id : 'guest'}`;
+}
+
+function bindPlaylistForms() {
+    playlistCreateForm.addEventListener('submit', event => {
+        event.preventDefault();
+        createPlaylistFromInput(playlistNameInput);
+    });
+
+    playlistModalCreateForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const playlist = createPlaylistFromInput(playlistModalNameInput, { stayOnCurrentRoute: true });
+        if (playlist && songPendingPlaylistAdd) {
+            addSongToPlaylist(songPendingPlaylistAdd, playlist.id);
+        }
+    });
+}
+
+function createPlaylistFromInput(input, options = {}) {
+    const name = input.value.trim();
+    if (!name) {
+        return null;
+    }
+
+    const playlists = getPlaylists();
+    const existingPlaylist = playlists.find(playlist => playlist.name.toLowerCase() === name.toLowerCase());
+    if (existingPlaylist) {
+        selectedPlaylistId = existingPlaylist.id;
+        input.value = '';
+        renderPlaylists();
+        renderPlaylistModalList();
+        return existingPlaylist;
+    }
+
+    const playlist = {
+        id: `playlist-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        name,
+        songIds: [],
+        createdAt: new Date().toISOString()
+    };
+
+    playlists.push(playlist);
+    savePlaylists(playlists);
+    selectedPlaylistId = playlist.id;
+    input.value = '';
+    renderPlaylists();
+    renderPlaylistModalList();
+
+    if (!options.stayOnCurrentRoute && location.hash !== routePlaylists) {
+        navigatePlaylists();
+    }
+
+    return playlist;
+}
+
+function renderPlaylists() {
+    const playlists = getPlaylists();
+    playlistList.innerHTML = '';
+
+    if (!playlists.length) {
+        playlistList.innerHTML = '<p class="empty-playlists">No playlists yet.</p>';
+        playlistDetail.innerHTML = '<p class="empty-playlists">Create a playlist to start collecting songs.</p>';
+        return;
+    }
+
+    if (!selectedPlaylistId || !playlists.some(playlist => playlist.id === selectedPlaylistId)) {
+        selectedPlaylistId = playlists[0].id;
+    }
+
+    playlists.forEach(playlist => {
+        const button = document.createElement('button');
+        button.className = `playlist-list-item ${playlist.id === selectedPlaylistId ? 'active' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+            <span>${escapeHtml(playlist.name)}</span>
+            <small>${playlist.songIds.length} song${playlist.songIds.length === 1 ? '' : 's'}</small>
+        `;
+        button.addEventListener('click', () => {
+            selectedPlaylistId = playlist.id;
+            renderPlaylists();
+        });
+        playlistList.appendChild(button);
+    });
+
+    renderSelectedPlaylist();
+}
+
+function renderSelectedPlaylist() {
+    const playlist = getPlaylists().find(item => item.id === selectedPlaylistId);
+    if (!playlist) {
+        playlistDetail.innerHTML = '<p class="empty-playlists">Select a playlist.</p>';
+        return;
+    }
+
+    const songs = getSongsForPlaylist(playlist);
+    playlistDetail.innerHTML = `
+        <div class="playlist-detail-header">
+            <div>
+                <p class="playlist-eyebrow">Playlist</p>
+                <h2>${escapeHtml(playlist.name)}</h2>
+                <span>${songs.length} song${songs.length === 1 ? '' : 's'}</span>
+            </div>
+            <button class="delete-playlist-btn" id="deletePlaylistButton" type="button">Delete Playlist</button>
+        </div>
+        <div class="playlist-song-list" id="playlistSongList"></div>
+    `;
+
+    document.getElementById('deletePlaylistButton').addEventListener('click', () => {
+        deletePlaylist(playlist.id);
+    });
+
+    const list = document.getElementById('playlistSongList');
+    if (!songs.length) {
+        list.innerHTML = '<p class="empty-playlists">No songs in this playlist yet.</p>';
+        return;
+    }
+
+    songs.forEach(song => {
+        const item = document.createElement('article');
+        item.className = 'playlist-song-item';
+        item.innerHTML = `
+            <img src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/80')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+            <div>
+                <h3>${escapeHtml(formatSongTitle(song.title))}</h3>
+                <p>${escapeHtml(song.artist)}</p>
+            </div>
+            <button class="playlist-song-play" type="button">Play</button>
+            <button class="playlist-song-remove" type="button">Remove</button>
+        `;
+        item.addEventListener('click', () => openSong(song));
+        item.querySelector('.playlist-song-play').addEventListener('click', event => {
+            event.stopPropagation();
+            openSong(song);
+        });
+        item.querySelector('.playlist-song-remove').addEventListener('click', event => {
+            event.stopPropagation();
+            removeSongFromPlaylist(song.id, playlist.id);
+        });
+        list.appendChild(item);
+    });
+}
+
+function openPlaylistModal(song) {
+    songPendingPlaylistAdd = song;
+    playlistModalSong.innerHTML = `
+        <div class="playlist-modal-song">
+            <img src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/80')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
+            <div>
+                <h3>${escapeHtml(formatSongTitle(song.title))}</h3>
+                <p>${escapeHtml(song.artist)}</p>
+            </div>
+        </div>
+    `;
+    playlistModal.hidden = false;
+    renderPlaylistModalList();
+}
+
+function closePlaylistModal() {
+    playlistModal.hidden = true;
+    songPendingPlaylistAdd = null;
+    playlistModalNameInput.value = '';
+}
+
+function renderPlaylistModalList() {
+    const playlists = getPlaylists();
+    playlistModalList.innerHTML = '';
+
+    if (!playlists.length) {
+        playlistModalList.innerHTML = '<p class="empty-playlists">Create a playlist first.</p>';
+        return;
+    }
+
+    playlists.forEach(playlist => {
+        const button = document.createElement('button');
+        const hasSong = songPendingPlaylistAdd && playlist.songIds.map(String).includes(String(songPendingPlaylistAdd.id));
+        button.className = `playlist-modal-item ${hasSong ? 'added' : ''}`;
+        button.type = 'button';
+        button.innerHTML = `
+            <span>${escapeHtml(playlist.name)}</span>
+            <small>${hasSong ? 'Added' : `${playlist.songIds.length} song${playlist.songIds.length === 1 ? '' : 's'}`}</small>
+        `;
+        button.addEventListener('click', () => {
+            if (songPendingPlaylistAdd) {
+                addSongToPlaylist(songPendingPlaylistAdd, playlist.id);
+            }
+        });
+        playlistModalList.appendChild(button);
+    });
+}
+
+function addSongToPlaylist(song, playlistId) {
+    const playlists = getPlaylists();
+    const playlist = playlists.find(item => item.id === playlistId);
+    if (!playlist) {
+        return;
+    }
+
+    const songId = String(song.id);
+    if (!playlist.songIds.map(String).includes(songId)) {
+        playlist.songIds.push(songId);
+        savePlaylists(playlists);
+    }
+
+    selectedPlaylistId = playlist.id;
+    renderPlaylistModalList();
+    renderPlaylists();
+}
+
+function removeSongFromPlaylist(songId, playlistId) {
+    const playlists = getPlaylists();
+    const playlist = playlists.find(item => item.id === playlistId);
+    if (!playlist) {
+        return;
+    }
+
+    playlist.songIds = playlist.songIds.filter(item => String(item) !== String(songId));
+    savePlaylists(playlists);
+    renderPlaylists();
+    renderPlaylistModalList();
+}
+
+function deletePlaylist(playlistId) {
+    const playlist = getPlaylists().find(item => item.id === playlistId);
+    if (!playlist) {
+        return;
+    }
+
+    if (!window.confirm(`Delete playlist "${playlist.name}"?`)) {
+        return;
+    }
+
+    const playlists = getPlaylists().filter(item => item.id !== playlistId);
+    savePlaylists(playlists);
+    selectedPlaylistId = playlists.length ? playlists[0].id : null;
+    renderPlaylists();
+}
+
+function removeSongsFromPlaylists(songIds) {
+    const removedIds = new Set(songIds.map(String));
+    const playlists = getPlaylists().map(playlist => ({
+        ...playlist,
+        songIds: playlist.songIds.filter(songId => !removedIds.has(String(songId)))
+    }));
+    savePlaylists(playlists);
+}
+
+function getSongsForPlaylist(playlist) {
+    const songIds = new Set(playlist.songIds.map(String));
+    return allSongs.filter(song => songIds.has(String(song.id)));
+}
+
+function getPlaylists() {
+    return JSON.parse(localStorage.getItem(getPlaylistsKey()) || '[]');
+}
+
+function savePlaylists(playlists) {
+    localStorage.setItem(getPlaylistsKey(), JSON.stringify(playlists));
+}
+
+function getPlaylistsKey() {
+    return `${playlistsKeyPrefix}:${currentUser ? currentUser.id : 'guest'}`;
+}
+
 function getSongIndex(song) {
-    return allSongs.findIndex(item => String(item.id) === String(song.id));
+    return getPlaybackQueue().findIndex(item => String(item.id) === String(song.id));
 }
 
 function loadProfile() {
@@ -719,6 +1332,13 @@ function bindAdminUploadForm() {
         }
 
         const message = document.getElementById('uploadSongMessage');
+        const validationMessage = getUploadSongValidationMessage(form);
+        if (validationMessage) {
+            message.className = 'error';
+            message.innerText = validationMessage;
+            return;
+        }
+
         const formData = new FormData(form);
         formData.append('user_id', currentUser.id);
 
@@ -744,6 +1364,31 @@ function bindAdminUploadForm() {
             message.innerText = 'Unable to upload song right now.';
         }
     });
+}
+
+function getUploadSongValidationMessage(form) {
+    const missingFields = [];
+    const title = form.querySelector('#songTitleInput').value.trim();
+    const artist = form.querySelector('#songArtistInput').value.trim();
+    const audioFile = form.querySelector('#songFileInput').files[0];
+
+    if (!title) {
+        missingFields.push('song title');
+    }
+
+    if (!artist) {
+        missingFields.push('artist');
+    }
+
+    if (!audioFile) {
+        missingFields.push('audio file');
+    }
+
+    if (!missingFields.length) {
+        return '';
+    }
+
+    return `Please fill in ${missingFields.join(', ')} before uploading.`;
 }
 
 function escapeHtml(value) {
@@ -774,12 +1419,297 @@ function formatTime(seconds) {
     return `${min}:${sec}`;
 }
 
+function addChatMessage(message, sender) {
+    const bubble = document.createElement('div');
+    bubble.className = `chatbot-message ${sender}`;
+    bubble.innerText = message;
+    chatbotMessages.appendChild(bubble);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+}
+async function updateLyrics(song) {
+    const lyricsContent = document.getElementById('lyricsContent');
+    const requestId = ++lyricsRequestId;
+
+    if (!lyricsContent) {
+        return;
+    }
+
+    syncedLyricsLines = [];
+    activeLyricIndex = -1;
+    lyricsContent.textContent = 'Loading lyrics...';
+
+    try {
+        const data = await fetchLyricsForSong(song);
+        if (requestId !== lyricsRequestId) {
+            return;
+        }
+
+        if (data.source === 'lyrics_request_failed') {
+            console.warn('Lyrics API fallback:', data.source);
+        }
+
+        syncedLyricsLines = parseSyncedLyrics(data.syncedLyrics);
+        console.log('Lyrics loaded:', {
+            source: data.source,
+            syncedLines: syncedLyricsLines.length
+        });
+        renderLyrics(syncedLyricsLines, data.lyrics);
+        updateActiveLyricLine();
+    } catch (error) {
+        if (requestId !== lyricsRequestId) {
+            return;
+        }
+
+        syncedLyricsLines = [];
+        activeLyricIndex = -1;
+        lyricsContent.textContent = 'Unable to load lyrics right now.';
+    }
+}
+
+async function fetchLyricsForSong(song) {
+    const key = getLyricsCacheKey(song);
+    if (lyricsCache.has(key)) {
+        return lyricsCache.get(key);
+    }
+
+    const request = fetchLyricsFromApi(song)
+        .catch(error => {
+            lyricsCache.delete(key);
+            throw error;
+        });
+
+    lyricsCache.set(key, request);
+    const data = await request;
+    lyricsCache.set(key, data);
+    return data;
+}
+
+async function fetchLyricsFromApi(song) {
+    const params = new URLSearchParams({
+        title: song.title || '',
+        artist: song.artist || '',
+        album: song.album || '',
+        duration: song.duration || ''
+    });
+
+    const response = await fetch(`/lyrics?${params.toString()}`);
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.lyrics || 'Unable to load lyrics right now.');
+    }
+
+    return data;
+}
+
+async function preloadLyricsForSongs(songs) {
+    if (lyricsPreloadStarted) {
+        songs.forEach(song => {
+            if (!lyricsCache.has(getLyricsCacheKey(song))) {
+                fetchLyricsForSong(song).catch(() => {});
+            }
+        });
+        return;
+    }
+
+    lyricsPreloadStarted = true;
+    for (const song of songs) {
+        try {
+            await fetchLyricsForSong(song);
+        } catch (error) {
+            console.warn('Lyrics preload failed:', song.title || 'Unknown song');
+        }
+    }
+}
+
+function getLyricsCacheKey(song) {
+    return [
+        song.title,
+        song.artist,
+        song.album,
+        song.duration
+    ].map(value => String(value || '').trim().toLowerCase()).join('|');
+}
+
+function parseSyncedLyrics(syncedLyrics) {
+    return String(syncedLyrics || '')
+        .split('\n')
+        .map(line => {
+            const match = line.match(/^\[(\d{2}:\d{2}(?:\.\d{1,3})?)\]\s*(.*)$/);
+            if (!match) {
+                return null;
+            }
+
+            return {
+                time: parseLyricTime(match[1]),
+                text: match[2].trim()
+            };
+        })
+        .filter(Boolean);
+}
+
+function parseLyricTime(timeText) {
+    const [minutes, seconds] = String(timeText || '').split(':').map(Number);
+    if (Number.isNaN(minutes) || Number.isNaN(seconds)) {
+        return 0;
+    }
+
+    return (minutes * 60) + seconds;
+}
+
+function renderLyrics(lines, fallbackLyrics) {
+    const lyricsContent = document.getElementById('lyricsContent');
+    if (!lyricsContent) {
+        return;
+    }
+
+    activeLyricIndex = -1;
+    lyricsContent.innerHTML = '';
+
+    if (lines.length) {
+        lines.forEach((line, index) => {
+            const lyricLine = document.createElement('div');
+            lyricLine.className = 'lyric-line';
+            lyricLine.dataset.index = String(index);
+            lyricLine.textContent = line.text || '...';
+            lyricsContent.appendChild(lyricLine);
+        });
+        return;
+    }
+
+    const fallback = document.createElement('div');
+    fallback.className = 'lyrics-plain';
+    fallback.textContent = fallbackLyrics || 'No lyrics found for this song.';
+    lyricsContent.appendChild(fallback);
+}
+
+function updateActiveLyricLine() {
+    if (!syncedLyricsLines.length) {
+        return;
+    }
+
+    const currentTime = audio.currentTime || 0;
+    let nextActiveIndex = -1;
+
+    for (let i = 0; i < syncedLyricsLines.length; i += 1) {
+        const currentLine = syncedLyricsLines[i];
+        const nextLine = syncedLyricsLines[i + 1];
+        if (currentTime >= currentLine.time && (!nextLine || currentTime < nextLine.time)) {
+            nextActiveIndex = i;
+            break;
+        }
+    }
+
+    if (nextActiveIndex === activeLyricIndex) {
+        return;
+    }
+
+    const previousLine = document.querySelector('.lyric-line.active');
+    if (previousLine) {
+        previousLine.classList.remove('active');
+    }
+
+    activeLyricIndex = nextActiveIndex;
+    const activeLine = document.querySelector(`.lyric-line[data-index="${activeLyricIndex}"]`);
+    if (activeLine) {
+        activeLine.classList.add('active');
+        activeLine.scrollIntoView({
+            block: 'center',
+            behavior: 'smooth'
+        });
+    }
+}
+
+function getChatbotReply(message) {
+    const text = message.toLowerCase();
+
+    if (text.includes('upload')) {
+        return 'Admins can upload songs from the Upload Song form on the Home page.';
+    }
+
+    if (text.includes('favorite') || text.includes('favourite')) {
+        return 'Click the heart button on a song card to add or remove it from Favorites.';
+    }
+
+    if (text.includes('playlist')) {
+        return 'Go to Playlists, create a playlist, then use Add to Playlist on any song card.';
+    }
+
+    if (text.includes('lucky') || text.includes('photocard')) {
+        return 'Daily Lucky Draw lets you collect one random photocard each day.';
+    }
+
+    if (text.includes('recommend')) {
+        if (!allSongs.length) {
+            return 'I do not see any songs loaded yet.';
+        }
+
+        const song = allSongs[Math.floor(Math.random() * allSongs.length)];
+        return `Try listening to ${formatSongTitle(song.title)} by ${song.artist}.`;
+    }
+
+    if (text.includes('shuffle')) {
+        return 'Use the shuffle button in the music player to randomize the upcoming songs.';
+    }
+
+    return 'I can help with uploading songs, favorites, playlists, Lucky Draw, shuffle, and song recommendations.';
+}
+
+async function getAiChatbotReply(message) {
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message,
+                songs: allSongs.map(song => ({
+                    id: song.id,
+                    title: song.title,
+                    artist: song.artist,
+                    album: song.album,
+                    duration: song.duration
+                })),
+                favorites: allSongs
+                    .filter(isFavoriteSong)
+                    .map(song => ({
+                        id: song.id,
+                        title: song.title,
+                        artist: song.artist
+                    })),
+                playlists: getPlaylists().map(playlist => ({
+                    name: playlist.name,
+                    songs: getSongsForPlaylist(playlist).map(song => ({
+                        title: song.title,
+                        artist: song.artist
+                    }))
+                }))
+            })
+        });
+
+        const data = await response.json();
+        if (data.source === 'local' && data.reason) {
+            console.warn(`Chatbot used local reply: ${data.reason}`);
+        }
+
+        if (data.source === 'openai' && data.usage) {
+            console.log('OpenAI chatbot token usage:', data.usage);
+        }
+
+        return data.reply || getChatbotReply(message);
+    } catch (error) {
+        console.log('Chatbot API failed:', error);
+        return getChatbotReply(message);
+    }
+}
+
 audio.addEventListener('timeupdate', () => {
     if (!isPlaybackActive && !audio.paused) {
         return;
     }
 
     syncProgressUi();
+    updateActiveLyricLine();
     persistPlaybackState(isPlaybackActive);
 });
 
@@ -826,21 +1756,58 @@ audio.addEventListener('error', () => {
 
 audio.addEventListener('ended', () => {
     isPlaybackActive = false;
-    if (!allSongs.length || currentSongIndex === -1) {
+    if (!allSongs.length) {
         updatePlayButtons(false);
         return;
     }
 
-    currentSongIndex = (currentSongIndex + 1) % allSongs.length;
-    const nextSong = allSongs[currentSongIndex];
-    loadSongIntoUi(nextSong);
-    startPlayback();
+    playNextSong();
 });
 
 window.addEventListener('hashchange', renderRoute);
 document.getElementById('musicPlayButton').addEventListener('click', togglePlay);
+document.getElementById('musicPreviousButton').addEventListener('click', playPreviousSong);
+document.getElementById('musicNextButton').addEventListener('click', playNextSong);
+document.getElementById('musicShuffleButton').addEventListener('click', playRandomSong);
 document.getElementById('musicProgressBar').addEventListener('input', seekSongFromMusic);
 document.getElementById('dailyDrawButton').addEventListener('click', dailyLuckyDraw);
+document.getElementById('nowPlayingLink').addEventListener('click', openCurrentSongPlayer);
+document.getElementById('nowPlayingLink').addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openCurrentSongPlayer();
+    }
+});
+
+chatbotToggle.addEventListener('click', () => {
+    chatbotPanel.hidden = false;
+});
+
+chatbotClose.addEventListener('click', () => {
+    chatbotPanel.hidden = true;
+});
+
+chatbotForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const message = chatbotInput.value.trim();
+    if (!message) return;
+
+    addChatMessage(message, 'user');
+    chatbotInput.value = '';
+
+    const reply = await getAiChatbotReply(message);
+    addChatMessage(reply, 'bot');
+});
+
+
+
+playlistModalClose.addEventListener('click', closePlaylistModal);
+playlistModal.addEventListener('click', event => {
+    if (event.target === playlistModal) {
+        closePlaylistModal();
+    }
+});
 photocardModalClose.addEventListener('click', closePhotocardPopup);
 photocardModal.addEventListener('click', event => {
     if (event.target === photocardModal) {
@@ -850,6 +1817,9 @@ photocardModal.addEventListener('click', event => {
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !photocardModal.hidden) {
         closePhotocardPopup();
+    }
+    if (event.key === 'Escape' && !playlistModal.hidden) {
+        closePlaylistModal();
     }
 });
 

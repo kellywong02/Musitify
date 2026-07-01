@@ -27,13 +27,19 @@ public class RetrofitClient {
                         @Override
                         public Response intercept(Chain chain) throws IOException {
                             Request original = chain.request();
-                            Request request = original.newBuilder()
+                            Request.Builder builder = original.newBuilder()
                                     .header("apikey", API_KEY)
-                                    .header("Authorization", "Bearer " + API_KEY)
-                                    .header("Content-Type", "application/json")
-                                    .header("Prefer", "return=representation")
-                                    .build();
-                            return chain.proceed(request);
+                                    .header("Authorization", "Bearer " + API_KEY);
+                            
+                            // Only add default headers if not already set
+                            if (original.header("Content-Type") == null) {
+                                builder.header("Content-Type", "application/json");
+                            }
+                            if (original.header("Prefer") == null) {
+                                builder.header("Prefer", "return=representation");
+                            }
+                            
+                            return chain.proceed(builder.build());
                         }
                     })
                     .build();

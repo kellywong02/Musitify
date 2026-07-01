@@ -23,7 +23,9 @@ export class Musitify_AddMusic{
     await this.page.getByRole('textbox', { name: 'Password' }).fill(password);
     await this.page.getByRole('button', { name: 'Login' }).click();
   }
-
+  get UploadSongHeader(): Locator{
+    return this.page.getByRole('heading', { name: 'Upload Song' });
+  }
   get SongTitle(): Locator{
     return this.page.getByRole('textbox', { name: 'Song title' });
   }
@@ -56,6 +58,14 @@ get UploadSongSuccessfullyToast (): Locator{
   return this.page.getByText('Song uploaded successfully.');
 }
 
+get UploadSongMessage(): Locator{
+  return this.page.locator('#uploadSongMessage');
+}
+
+get UploadSongEmptyFieldsError(): Locator{
+  return this.page.getByText(/Please fill in .* before uploading\./);
+}
+
 
 songCardByTitle(songTitle: string): Locator{
   return this.page.locator('.song-card', {
@@ -63,17 +73,44 @@ songCardByTitle(songTitle: string): Locator{
   });
 }
 
+songCardByArtist(songArtist: string): Locator{
+  return this.page.locator('.song-card', {
+    has: this.page.locator('.artist', { hasText: new RegExp(escapeRegExp(songArtist), 'i') })
+  });
+}
+
+songCardByDuration(songDuration: string): Locator{
+  return this.page.locator('.song-card', {
+    has: this.page.locator('.duration', { hasText: new RegExp(escapeRegExp(songDuration), 'i') })
+  });
+}
+
 songCardPlayButton(songTitle: string): Locator{
-  return this.songCardByTitle(songTitle).getByRole('button', { name: 'Play' });
+  return this.songCardByTitle(songTitle).getByRole('button', { name: /^► Play$/ });
 }
 
 songCardRemoveButton(songTitle: string): Locator{
   return this.songCardByTitle(songTitle).getByRole('button', { name: 'Remove Song' });
 }
 
+get SongPlayerTitle():Locator{
+  return this.page.locator('#songTitle');
 
 }
 
+get SongPlayerArtist():Locator{
+  return this.page.locator('#songArtist');
+}
+
+get SongPlayButton():Locator{
+  return this.page.locator('.play-btn');
+}
+
+
+
+
+
+}
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

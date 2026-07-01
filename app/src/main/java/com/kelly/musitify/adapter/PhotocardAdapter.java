@@ -32,8 +32,17 @@ public class PhotocardAdapter extends RecyclerView.Adapter<PhotocardAdapter.View
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         UserPhotocard item = collection.get(position);
-        holder.tvName.setText(item.photocard.member_name);
-        Glide.with(holder.itemView.getContext()).load(item.photocard.image_url).into(holder.ivImage);
+        if (item.photocard != null) {
+            holder.tvName.setText(item.photocard.member_name);
+            Glide.with(holder.itemView.getContext())
+                    .load(item.photocard.image_url)
+                    .placeholder(android.R.color.darker_gray)
+                    .error(android.R.drawable.ic_dialog_alert)
+                    .into(holder.ivImage);
+        } else {
+            holder.tvName.setText("Unknown Card");
+            holder.ivImage.setImageResource(android.R.drawable.ic_dialog_alert);
+        }
     }
 
     @Override

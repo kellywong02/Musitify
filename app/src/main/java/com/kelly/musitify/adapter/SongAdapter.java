@@ -41,13 +41,15 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         holder.tvTitle.setText(song.title.toUpperCase());
         holder.tvArtist.setText(song.artist);
 
-        String coverUrl = song.cover_url;
-        if (coverUrl == null || coverUrl.isEmpty()) {
-            coverUrl = "https://via.placeholder.com/300";
+        String fullCoverUrl = song.cover_url;
+        if (fullCoverUrl != null && !fullCoverUrl.isEmpty() && !fullCoverUrl.startsWith("http")) {
+            fullCoverUrl = "https://oovlijlvshbvanbehvqg.supabase.co/storage/v1/object/public/songs/" + fullCoverUrl;
+        } else if (fullCoverUrl == null || fullCoverUrl.isEmpty()) {
+            fullCoverUrl = "https://via.placeholder.com/300";
         }
 
         Glide.with(holder.itemView.getContext())
-                .load(coverUrl)
+                .load(fullCoverUrl)
                 .centerCrop()
                 .into(holder.ivCover);
 
