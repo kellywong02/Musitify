@@ -22,6 +22,21 @@ Any music, album artwork, artist names, photocards, lyrics, or other media used 
 
 If this repository is public, avoid committing real API keys, private credentials, copyrighted audio files, or private user data.
 
+## AI Usage
+
+AI assistance was used during this project as a learning and development aid.
+
+AI was used to help with:
+
+- Understanding implementation approaches
+- Improving frontend UI behavior
+- Debugging application issues
+- Writing and refining Playwright automation test cases
+- Improving test selectors, waits, and page object patterns
+- Drafting documentation and README content
+
+All AI-assisted code and test cases were reviewed, adapted, and tested as part of the learning process. The purpose of using AI in this project is to support self-learning, not to replace understanding of the code or test automation concepts.
+
 ## ✨ Features
 
 - 🎧 Stream and play uploaded songs
