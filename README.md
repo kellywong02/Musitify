@@ -136,6 +136,28 @@ Musitify - Android/
 |-- README.md
 ```
 
+## 📸 Screenshots
+
+### Login Page
+
+![Musitify login page](screenshots/readme/login.png)
+
+### Home Page
+
+![Musitify home page](screenshots/readme/home.png)
+
+### Song Player With Lyrics
+
+![Musitify song player page with lyrics](screenshots/readme/song-player.png)
+
+### Playlists Page
+
+![Musitify playlists page](screenshots/readme/playlists.png)
+
+### Daily Lucky Draw
+
+![Musitify daily lucky draw page](screenshots/readme/lucky-draw.png)
+
 ## 🔐 Environment Variables
 
 Create a `.env` file based on `.env.example`.
@@ -207,16 +229,6 @@ The test suite is used to practice automation for:
 - 📤 Handling file uploads
 - 🌐 Waiting for API responses instead of relying on fixed timeouts
 - 🧱 Using page objects for reusable locators
-
-## 🌍 Notes For Public GitHub
-
-Before making this repository public:
-
-- 🔒 Keep `.env` ignored
-- 🚫 Do not upload real private credentials
-- 🎧 Do not upload copyrighted audio files unless you have permission
-- 🖼️ Use sample/demo assets where possible
-- 📌 Make it clear that the project is for education and automation practice
 
 ## 🚀 Future Improvements
 
