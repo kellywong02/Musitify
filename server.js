@@ -21,6 +21,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 const songsBucket = process.env.SUPABASE_SONGS_BUCKET || 'songs';
+const playlistsBucket = process.env.SUPABASE_PLAYLISTS_BUCKET || songsBucket;
 const upload = multer({ storage: multer.memoryStorage() });
 const fallbackCoverUrls = {
     1: 'https://static.wikia.nocookie.net/ive/images/f/f2/LOVE_DIVE_album_cover.png/revision/latest/scale-to-width-down/1000?cb=20221102125058',
@@ -538,6 +539,63 @@ app.get('/photocards/:id/download', async (req, res) => {
     }
 });
 
+app.get('/playlists', async (req, res) => {
+    const userId = req.query.user_id;
+
+    try {
+        const { data: user, error: userError } = await getUserById(userId);
+
+        if (userError) {
+            throw userError;
+        }
+
+        if (!user) {
+            return res.status(401).json({
+                message: 'User not found'
+            });
+        }
+
+        const playlists = await loadUserPlaylists(user.id);
+        res.json({ playlists });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: 'Database error'
+        });
+    }
+});
+
+app.put('/playlists', async (req, res) => {
+    const { user_id, playlists = [] } = req.body;
+
+    try {
+        const { data: user, error: userError } = await getUserById(user_id);
+
+        if (userError) {
+            throw userError;
+        }
+
+        if (!user) {
+            return res.status(401).json({
+                message: 'User not found'
+            });
+        }
+
+        const normalizedPlaylists = normalizePlaylists(playlists);
+        await saveUserPlaylists(user.id, normalizedPlaylists);
+
+        res.json({
+            message: 'Playlists saved',
+            playlists: normalizedPlaylists
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: 'Database error'
+        });
+    }
+});
+
 app.post('/chat', async (req, res) => {
     const { message, songs = [], favorites = [], playlists = [] } = req.body;
     const userMessage = String(message || '').trim();
@@ -921,6 +979,76 @@ function getTodayDate() {
 
 function isAdminUser(user) {
     return String(user && user.role || '').toLowerCase() === 'admin';
+}
+
+async function loadUserPlaylists(userId) {
+    const { data, error } = await supabase
+        .storage
+        .from(playlistsBucket)
+        .download(getPlaylistsStoragePath(userId));
+
+    if (error) {
+        if (String(error.statusCode) === '404' || /not found/i.test(error.message || '')) {
+            return [];
+        }
+
+        throw error;
+    }
+
+    const text = await data.text();
+    if (!text.trim()) {
+        return [];
+    }
+
+    return normalizePlaylists(JSON.parse(text));
+}
+
+async function saveUserPlaylists(userId, playlists) {
+    const payload = JSON.stringify(normalizePlaylists(playlists), null, 2);
+    const { error } = await supabase
+        .storage
+        .from(playlistsBucket)
+        .upload(getPlaylistsStoragePath(userId), Buffer.from(payload), {
+            contentType: 'application/json',
+            upsert: true
+        });
+
+    if (error) {
+        throw error;
+    }
+}
+
+function getPlaylistsStoragePath(userId) {
+    return `playlists/${String(userId).replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+}
+
+function normalizePlaylists(playlists) {
+    if (!Array.isArray(playlists)) {
+        return [];
+    }
+
+    const seenIds = new Set();
+    const seenNames = new Set();
+
+    return playlists
+        .map(playlist => ({
+            id: String(playlist && playlist.id || '').trim(),
+            name: String(playlist && playlist.name || '').trim(),
+            songIds: Array.isArray(playlist && playlist.songIds)
+                ? [...new Set(playlist.songIds.map(songId => String(songId)))]
+                : [],
+            createdAt: String(playlist && playlist.createdAt || new Date().toISOString())
+        }))
+        .filter(playlist => {
+            const playlistNameKey = playlist.name.toLowerCase();
+            if (!playlist.id || !playlist.name || seenIds.has(playlist.id) || seenNames.has(playlistNameKey)) {
+                return false;
+            }
+
+            seenIds.add(playlist.id);
+            seenNames.add(playlistNameKey);
+            return true;
+        });
 }
 
 function getOpenAiReplyText(data) {

@@ -478,6 +478,10 @@ body.music-route-active .player {
     width: min(100%, 460px);
 }
 
+.playlist-create-panel {
+    width: min(100%, 460px);
+}
+
 .playlist-create-form input {
     min-width: 0;
 }
@@ -495,6 +499,20 @@ body.music-route-active .player {
 .playlist-create-form.compact button {
     width: 110px;
     flex-basis: 110px;
+}
+
+.playlist-form-message {
+    color: #ff9d9d;
+    font-size: 14px;
+    font-weight: bold;
+    min-height: 20px;
+    width: min(100%, 460px);
+}
+
+.playlist-modal-card .playlist-form-message {
+    width: 100%;
+    margin-top: -8px;
+    margin-bottom: 12px;
 }
 
 .playlist-layout {

@@ -77,6 +77,28 @@ export class Musitify_Playback{
   get PlayPauseButton(): Locator{
     return this.page.locator('#playPauseBtn');
   }
+
+  get ShuffledSongButton(): Locator{
+    return this.page.getByRole('button', { name: 'Shuffle song' });
+  }
+
+  get PreviousSongButton(): Locator{
+    return this.page.getByRole('button', { name: 'Previous song' });
+  }
+
+  get NextSongButton(): Locator{
+    return this.page.getByRole('button', { name: 'Next song' });
+  }
+
+  get UpcomingSongTitles(): Locator {
+  return this.page.locator('#upcomingList .upcoming-title');
+  }
+
+  get ProgressBar(): Locator {
+  return this.page.locator('#progressBar');
+  }
+  
+  
 }
 
 function escapeRegExp(value: string): string {

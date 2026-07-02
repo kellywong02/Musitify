@@ -62,10 +62,13 @@
             <p class="playlist-eyebrow">Your Library</p>
             <h1>Playlists</h1>
         </div>
-        <form class="playlist-create-form" id="playlistCreateForm">
-            <input id="playlistNameInput" name="playlistName" placeholder="New playlist name" required>
-            <button type="submit">Create Playlist</button>
-        </form>
+        <div class="playlist-create-panel">
+            <form class="playlist-create-form" id="playlistCreateForm">
+                <input id="playlistNameInput" name="playlistName" placeholder="New playlist name" required>
+                <button type="submit">Create Playlist</button>
+            </form>
+            <div class="playlist-form-message" id="playlistCreateMessage" aria-live="polite"></div>
+        </div>
     </section>
     <div class="playlist-layout">
         <section class="playlist-list-panel">
@@ -115,6 +118,7 @@
             <input id="playlistModalNameInput" name="playlistName" placeholder="New playlist name">
             <button type="submit">Create</button>
         </form>
+        <div class="playlist-form-message" id="playlistModalCreateMessage" aria-live="polite"></div>
         <div id="playlistModalList"></div>
     </div>
 </div>
@@ -212,6 +216,10 @@ let luckyDrawLoaded = false;
 let photocardDraws = [];
 let selectedPlaylistId = null;
 let songPendingPlaylistAdd = null;
+let userPlaylists = [];
+let playlistSaveQueue = Promise.resolve();
+let playlistsLoaded = false;
+let playlistsChangedDuringLoad = false;
 let syncedLyricsLines = [];
 let activeLyricIndex = -1;
 let lyricsRequestId = 0;
@@ -234,6 +242,7 @@ const photocardModalContent = document.getElementById('photocardModalContent');
 const photocardModalClose = document.getElementById('photocardModalClose');
 const playlistCreateForm = document.getElementById('playlistCreateForm');
 const playlistNameInput = document.getElementById('playlistNameInput');
+const playlistCreateMessage = document.getElementById('playlistCreateMessage');
 const playlistList = document.getElementById('playlistList');
 const playlistDetail = document.getElementById('playlistDetail');
 const playlistModal = document.getElementById('playlistModal');
@@ -241,14 +250,16 @@ const playlistModalClose = document.getElementById('playlistModalClose');
 const playlistModalSong = document.getElementById('playlistModalSong');
 const playlistModalCreateForm = document.getElementById('playlistModalCreateForm');
 const playlistModalNameInput = document.getElementById('playlistModalNameInput');
+const playlistModalCreateMessage = document.getElementById('playlistModalCreateMessage');
 const playlistModalList = document.getElementById('playlistModalList');
 
 async function initializeApp() {
     loadProfile();
-    await loadSongs();
-    restorePlaybackState();
     bindAdminUploadForm();
     bindPlaylistForms();
+    await loadPlaylists();
+    await loadSongs();
+    restorePlaybackState();
     renderRoute();
 }
 
@@ -1050,6 +1061,7 @@ function bindPlaylistForms() {
 
 function createPlaylistFromInput(input, options = {}) {
     const name = input.value.trim();
+    const messageElement = input === playlistModalNameInput ? playlistModalCreateMessage : playlistCreateMessage;
     if (!name) {
         return null;
     }
@@ -1057,11 +1069,8 @@ function createPlaylistFromInput(input, options = {}) {
     const playlists = getPlaylists();
     const existingPlaylist = playlists.find(playlist => playlist.name.toLowerCase() === name.toLowerCase());
     if (existingPlaylist) {
-        selectedPlaylistId = existingPlaylist.id;
-        input.value = '';
-        renderPlaylists();
-        renderPlaylistModalList();
-        return existingPlaylist;
+        showPlaylistFormError(messageElement, 'A playlist with this name already exists.');
+        return null;
     }
 
     const playlist = {
@@ -1075,6 +1084,7 @@ function createPlaylistFromInput(input, options = {}) {
     savePlaylists(playlists);
     selectedPlaylistId = playlist.id;
     input.value = '';
+    clearPlaylistFormError(messageElement);
     renderPlaylists();
     renderPlaylistModalList();
 
@@ -1083,6 +1093,24 @@ function createPlaylistFromInput(input, options = {}) {
     }
 
     return playlist;
+}
+
+function showPlaylistFormError(messageElement, message) {
+    if (!messageElement) {
+        return;
+    }
+
+    messageElement.className = 'playlist-form-message error';
+    messageElement.innerText = message;
+}
+
+function clearPlaylistFormError(messageElement) {
+    if (!messageElement) {
+        return;
+    }
+
+    messageElement.className = 'playlist-form-message';
+    messageElement.innerText = '';
 }
 
 function renderPlaylists() {
@@ -1174,6 +1202,7 @@ function renderSelectedPlaylist() {
 
 function openPlaylistModal(song) {
     songPendingPlaylistAdd = song;
+    clearPlaylistFormError(playlistModalCreateMessage);
     playlistModalSong.innerHTML = `
         <div class="playlist-modal-song">
             <img src="${escapeHtml(song.cover_url || 'https://via.placeholder.com/80')}" alt="${escapeHtml(formatSongTitle(song.title))} cover">
@@ -1191,6 +1220,7 @@ function closePlaylistModal() {
     playlistModal.hidden = true;
     songPendingPlaylistAdd = null;
     playlistModalNameInput.value = '';
+    clearPlaylistFormError(playlistModalCreateMessage);
 }
 
 function renderPlaylistModalList() {
@@ -1282,15 +1312,131 @@ function getSongsForPlaylist(playlist) {
 }
 
 function getPlaylists() {
-    return JSON.parse(localStorage.getItem(getPlaylistsKey()) || '[]');
+    return userPlaylists;
 }
 
 function savePlaylists(playlists) {
-    localStorage.setItem(getPlaylistsKey(), JSON.stringify(playlists));
+    userPlaylists = normalizePlaylists(playlists);
+    if (!playlistsLoaded) {
+        playlistsChangedDuringLoad = true;
+    }
+    localStorage.setItem(getPlaylistsKey(), JSON.stringify(userPlaylists));
+
+    if (!currentUser) {
+        return;
+    }
+
+    const playlistsToSave = userPlaylists.map(playlist => ({
+        ...playlist,
+        songIds: playlist.songIds.slice()
+    }));
+
+    playlistSaveQueue = playlistSaveQueue
+        .catch(() => {})
+        .then(() => persistPlaylists(playlistsToSave));
 }
 
 function getPlaylistsKey() {
     return `${playlistsKeyPrefix}:${currentUser ? currentUser.id : 'guest'}`;
+}
+
+async function loadPlaylists() {
+    const localPlaylists = readLocalPlaylists();
+
+    if (!currentUser) {
+        userPlaylists = localPlaylists;
+        return;
+    }
+
+    try {
+        const response = await fetch(`/playlists?user_id=${encodeURIComponent(currentUser.id)}`);
+        if (!response.ok) {
+            throw new Error('Unable to load playlists');
+        }
+
+        const data = await response.json();
+        const serverPlaylists = normalizePlaylists(data.playlists);
+        if (playlistsChangedDuringLoad) {
+            userPlaylists = mergePlaylists(serverPlaylists, userPlaylists);
+        } else {
+            userPlaylists = serverPlaylists.length ? serverPlaylists : localPlaylists;
+        }
+        localStorage.setItem(getPlaylistsKey(), JSON.stringify(userPlaylists));
+
+        if (!serverPlaylists.length && localPlaylists.length) {
+            savePlaylists(localPlaylists);
+        } else if (playlistsChangedDuringLoad) {
+            savePlaylists(userPlaylists);
+        }
+    } catch (error) {
+        console.log('Playlist sync unavailable:', error);
+        if (!playlistsChangedDuringLoad) {
+            userPlaylists = localPlaylists;
+        }
+    } finally {
+        playlistsLoaded = true;
+    }
+}
+
+async function persistPlaylists(playlists) {
+    try {
+        const response = await fetch('/playlists', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                playlists
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to save playlists');
+        }
+    } catch (error) {
+        console.log('Playlist save failed:', error);
+    }
+}
+
+function readLocalPlaylists() {
+    return normalizePlaylists(JSON.parse(localStorage.getItem(getPlaylistsKey()) || '[]'));
+}
+
+function normalizePlaylists(playlists) {
+    if (!Array.isArray(playlists)) {
+        return [];
+    }
+
+    const seenIds = new Set();
+    const seenNames = new Set();
+
+    return playlists
+        .map(playlist => ({
+            id: String(playlist && playlist.id || '').trim(),
+            name: String(playlist && playlist.name || '').trim(),
+            songIds: Array.isArray(playlist && playlist.songIds)
+                ? [...new Set(playlist.songIds.map(songId => String(songId)))]
+                : [],
+            createdAt: String(playlist && playlist.createdAt || new Date().toISOString())
+        }))
+        .filter(playlist => {
+            const playlistNameKey = playlist.name.toLowerCase();
+            if (!playlist.id || !playlist.name || seenIds.has(playlist.id) || seenNames.has(playlistNameKey)) {
+                return false;
+            }
+
+            seenIds.add(playlist.id);
+            seenNames.add(playlistNameKey);
+            return true;
+        });
+}
+
+function mergePlaylists(primaryPlaylists, secondaryPlaylists) {
+    return normalizePlaylists([
+        ...normalizePlaylists(secondaryPlaylists),
+        ...normalizePlaylists(primaryPlaylists)
+    ]);
 }
 
 function getSongIndex(song) {

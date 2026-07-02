@@ -4,14 +4,19 @@ import { Musitify_Login } from '../pageObjects/Musitify-Login';
 import { Musitify_Register } from '../pageObjects/Musitify-Register';
 import { Musitify_RemoveMusic } from '../pageObjects/RemoveSong';
 import { Musitify_Playback } from '../pageObjects/Playback';
+import { Musitify_SongPlayer } from '../pageObjects/SongPlayer';
+import { Musitify_Favourites } from '../pageObjects/Favourites';
+import { Musitify_Playlist } from '../pageObjects/Playlist';
 
 type PageFixtures = {
   addMusicPage: Musitify_AddMusic;
   loginPage: Musitify_Login;
   registerPage: Musitify_Register;
-  removeSongPage: Musitify_RemoveMusic
-  PlayBackPage: Musitify_Playback
-
+  removeSongPage: Musitify_RemoveMusic;
+  PlayBackPage: Musitify_Playback;
+  SongPlayerPage: Musitify_SongPlayer;
+  FavouritePage: Musitify_Favourites;
+  PlaylistPage: Musitify_Playlist;
 };
 
 export const test = base.extend<PageFixtures>({
@@ -33,6 +38,18 @@ export const test = base.extend<PageFixtures>({
 
   PlayBackPage: async ({ page }, use) => {
     await use(new Musitify_Playback(page));
+  },
+
+  SongPlayerPage: async ({ page }, use) => {
+    await use(new Musitify_SongPlayer(page));
+  },
+
+  FavouritePage: async ({ page }, use) => {
+    await use(new Musitify_Favourites(page));
+  },
+
+  PlaylistPage: async ({ page }, use) => {
+    await use(new Musitify_Playlist(page));
   },
 });
 
