@@ -7,6 +7,7 @@ import { Musitify_Playback } from '../pageObjects/Playback';
 import { Musitify_SongPlayer } from '../pageObjects/SongPlayer';
 import { Musitify_Favourites } from '../pageObjects/Favourites';
 import { Musitify_Playlist } from '../pageObjects/Playlist';
+import { Musitify_Photocard } from '../pageObjects/Photocard';
 
 type PageFixtures = {
   addMusicPage: Musitify_AddMusic;
@@ -17,6 +18,7 @@ type PageFixtures = {
   SongPlayerPage: Musitify_SongPlayer;
   FavouritePage: Musitify_Favourites;
   PlaylistPage: Musitify_Playlist;
+  PhotocardPage: Musitify_Photocard;
 };
 
 export const test = base.extend<PageFixtures>({
@@ -50,6 +52,10 @@ export const test = base.extend<PageFixtures>({
 
   PlaylistPage: async ({ page }, use) => {
     await use(new Musitify_Playlist(page));
+  },
+
+  PhotocardPage: async ({ page }, use) => {
+    await use(new Musitify_Photocard(page));
   },
 });
 

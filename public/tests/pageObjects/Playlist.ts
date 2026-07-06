@@ -68,7 +68,32 @@ export class Musitify_Playlist{
   get PlaylistItems(): Locator {
   return this.page.locator('#playlistList .playlist-list-item');
   }
+
+  
+  AddToPlaylist(songTitle: string): Locator{
+      return this.songCardByTitle(songTitle).getByRole('button', { name: 'Add to Playlist' });
+  }
+
+  ExistingPlaylist(playListName:string): Locator{
+    return this.page.locator('#playlistModalList', {
+        has: this.page.locator('span', { hasText: new RegExp(escapeRegExp(playListName), 'i') })
+      });
+  }
+
+  get ClosePlaylistPopUp(): Locator{
+      return this.page.getByRole('button', { name: 'Close playlist popup' });
+  }
+
+  SongInPlaylist(songTitle:string): Locator{
+    return this.page.locator('#playlistSongList',{ hasText: new RegExp(escapeRegExp(songTitle), 'i') });
+  }
+
+  RemoveSongFromPlaylist(songTitle:string): Locator{
+    return this.SongInPlaylist(songTitle).getByRole('button', { name: 'Remove', exact: true });
+  }
 }
+
+
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
