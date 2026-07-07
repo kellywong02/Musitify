@@ -17,9 +17,9 @@ test.beforeEach(async ({ page, PhotocardPage }) => {
   await expect(page).toHaveURL(PhotocardPage.LoginPage_url);
 });
 
-// test.afterEach(async ({ page }) => {
-//   await page.close();
-// });
+test.afterEach(async ({ page }) => {
+  await page.close();
+});
 
 test('Chatbot opens when clicking AI button', async({page,ChatbotPage, loginPage,PlayBackPage },testInfo) =>{
   await loginPage.login(NormalUser.email,NormalUser.password);

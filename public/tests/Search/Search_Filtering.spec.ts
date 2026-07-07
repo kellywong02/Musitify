@@ -17,9 +17,9 @@ test.beforeEach(async ({ page, SearchPage }) => {
   await expect(page).toHaveURL(SearchPage.LoginPage_url);
 });
 
-// test.afterEach(async ({ page }) => {
-//   await page.close();
-// });
+test.afterEach(async ({ page }) => {
+  await page.close();
+});
 
 test('Search by song title filters song cards', async({page,SearchPage, loginPage },testInfo) =>{
   await loginPage.login(NormalUser.email,NormalUser.password);

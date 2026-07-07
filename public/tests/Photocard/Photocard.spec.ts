@@ -17,9 +17,9 @@ test.beforeEach(async ({ page, PhotocardPage }) => {
   await expect(page).toHaveURL(PhotocardPage.LoginPage_url);
 });
 
-// test.afterEach(async ({ page }) => {
-//   await page.close();
-// });
+test.afterEach(async ({ page }) => {
+  await page.close();
+});
 
 test('User able to draw photocard & User only able to draw one photocard per day', async({page,PhotocardPage, loginPage},testInfo) =>{
     await loginPage.login(NormalUser.email, NormalUser.password);
