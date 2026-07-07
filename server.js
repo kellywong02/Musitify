@@ -30,6 +30,8 @@ const fallbackCoverUrls = {
     3: 'https://upload.wikimedia.org/wikipedia/en/8/81/Ive_%E2%80%93_After_Like.png'
 };
 
+
+
 console.log('Supabase client ready');
 
 // REGISTER API
