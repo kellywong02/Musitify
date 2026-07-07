@@ -11,7 +11,9 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+const publicDir = path.join(__dirname, 'public');
+
+app.use(express.static(publicDir));
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -33,6 +35,18 @@ const fallbackCoverUrls = {
 
 
 console.log('Supabase client ready');
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(publicDir, 'login.html'));
+});
+
+app.get('/home.html', (req, res) => {
+    res.sendFile(path.join(publicDir, 'home.html'));
+});
+
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(publicDir, 'login.html'));
+});
 
 // REGISTER API
 app.post('/register', async (req, res) => {
@@ -760,9 +774,13 @@ app.get('/lyrics', async (req, res) => {
 });
 
 // START SERVER
-app.listen(3000, () => {
-    console.log('Server running on http://localhost:3000');
-});
+if (require.main === module) {
+    app.listen(3000, () => {
+        console.log('Server running on http://localhost:3000');
+    });
+}
+
+module.exports = app;
 
 function formatSong(song) {
     return {
