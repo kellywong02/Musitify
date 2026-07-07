@@ -25,6 +25,7 @@ test.afterEach(async ({ page }) => {
 test('Click Play on a song card updates bottom player title and artist', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
   await expect(PlayBackPage.BottomSongPlayerArtist).toContainText(new RegExp(escapeRegExp("IVE"), 'i'));
   await expect(PlayBackPage.BottomSongPlayerTitle).toContainText(new RegExp(escapeRegExp("BANG BANG"), 'i'));
@@ -33,6 +34,7 @@ test('Click Play on a song card updates bottom player title and artist', async (
 test('Click bottom player song info navigates to song player page', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
   await PlayBackPage.OpenSongPlayer.click();
   await expect(PlayBackPage.SongPlayerTitle).toBeVisible();
@@ -44,6 +46,7 @@ test('Click bottom player song info navigates to song player page', async ({ pag
 test('Play/pause button toggles state ', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   await page.evaluate(() => {
     let isPaused = true;
 
@@ -77,6 +80,7 @@ test('Play/pause button toggles state ', async ({ page, PlayBackPage, loginPage 
 test('Next button changes to next song', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
   await expect(PlayBackPage.BottomSongPlayerTitle).toContainText(/BANG BANG/i);
   const BeforeNextSongScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Next-Song-submitted.png' });
@@ -91,6 +95,7 @@ test('Next button changes to next song', async ({ page, PlayBackPage, loginPage 
 test('Previous button changes to previous song', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
   await expect(PlayBackPage.BottomSongPlayerTitle).toContainText(/BANG BANG/i);
@@ -106,6 +111,7 @@ test('Previous button changes to previous song', async ({ page, PlayBackPage, lo
 test('Shuffle changes upcoming song order', async ({ page, PlayBackPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
   await PlayBackPage.songCardPlayButton('BANG BANG').click();
   await PlayBackPage.OpenSongPlayer.click();
   const BeforeShuffleSongScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Shuffling-Song-submitted.png' });
@@ -124,6 +130,7 @@ test('Shuffle changes upcoming song order', async ({ page, PlayBackPage, loginPa
 test('Progress bar updates while song plays', async ({ page, PlayBackPage, loginPage }) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await PlayBackPage.waitForSongCard('BANG BANG');
 
   await page.evaluate(() => {
     Object.defineProperty(HTMLMediaElement.prototype, 'duration', {

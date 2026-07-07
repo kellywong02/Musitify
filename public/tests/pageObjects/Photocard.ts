@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 export class Musitify_Photocard{
   readonly page: Page;
-  readonly LoginPage_url = 'http://localhost:3000/login.html';
-  readonly MainPage_url = 'http://localhost:3000/home.html#home';
+  readonly LoginPage_url = '/login.html';
+  readonly MainPage_url = '/home.html#home';
   readonly titleRegex = 'Musitify';
 
   constructor(page: Page) {
@@ -10,7 +10,7 @@ export class Musitify_Photocard{
   }
 
   async goto() {
-    await this.page.goto(this.MainPage_url);
+    await this.page.goto(this.LoginPage_url);
     const html = await this.page.content();
     expect(html).toContain(this.titleRegex);
   }
@@ -35,6 +35,46 @@ export class Musitify_Photocard{
 
   get SideBarLuckyDrawButton(): Locator {
     return this.page.locator('.menu', { hasText: 'Daily Lucky Draw' });
+  }
+
+  async openLuckyDrawAndWait(): Promise<void> {
+    const collectionResponse = this.page.waitForResponse(response =>
+      response.url().includes('/photocards/collection') &&
+      response.request().method() === 'GET' &&
+      response.status() < 500,
+      { timeout: 15000 }
+    ).catch(() => null);
+
+    await this.SideBarLuckyDrawButton.click();
+    await collectionResponse;
+    await this.waitForPhotocardCollectionLoaded();
+  }
+
+  async waitForPhotocardCollectionLoaded(): Promise<void> {
+    await expect(this.page.locator('#luckyDrawView')).toBeVisible();
+    await expect(this.page.locator('#dailyDrawMessage')).not.toHaveText(/Loading your collection/i, {
+      timeout: 15000
+    });
+    await expect(this.page.locator('#photocardCollection')).toBeVisible();
+
+    await this.page.waitForFunction(() => {
+      const collection = document.querySelector('#photocardCollection');
+      if (!collection) {
+        return false;
+      }
+
+      if (collection.querySelector('.empty-collection')) {
+        return true;
+      }
+
+      const cards = Array.from(collection.querySelectorAll('article'));
+      if (cards.length === 0) {
+        return false;
+      }
+
+      const images = Array.from(collection.querySelectorAll('img')) as HTMLImageElement[];
+      return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0);
+    }, null, { timeout: 15000 });
   }
 
   get SideBarPlaylistButton(): Locator {
@@ -82,7 +122,6 @@ photocardByArtistMemberAndRarity(
 get BackToCollectionButton(): Locator{
     return this.page.getByRole('link', { name: '← Back to collection' });
 }
-
 
 
 }

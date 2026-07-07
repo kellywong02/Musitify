@@ -21,12 +21,40 @@
 <div id="msg"></div>
 </div>
 <script>
+const songsCacheKey = 'musitifyPreloadedSongs';
+const songsCacheTimeKey = 'musitifyPreloadedSongsAt';
+const songsPreloadPromise = preloadSongs();
+
 function getApiUrl(path) {
     if (location.protocol === 'file:') {
         return `http://localhost:3000${path}`;
     }
 
     return path;
+}
+
+async function preloadSongs() {
+    try {
+        const response = await fetch(getApiUrl('/songs'));
+        if (!response.ok) {
+            throw new Error(`Unable to preload songs: ${response.status}`);
+        }
+
+        const songs = await response.json();
+        if (Array.isArray(songs) && songs.length) {
+            sessionStorage.setItem(songsCacheKey, JSON.stringify(songs));
+            sessionStorage.setItem(songsCacheTimeKey, String(Date.now()));
+        }
+    } catch (error) {
+        console.log('Song preload unavailable:', error);
+    }
+}
+
+async function waitForSongPreload() {
+    await Promise.race([
+        songsPreloadPromise,
+        new Promise(resolve => setTimeout(resolve, 1500))
+    ]);
 }
 
 async function login() {
@@ -59,6 +87,7 @@ async function login() {
         });
         const data = await res.json();
         if (res.ok) {
+            await waitForSongPreload();
             localStorage.removeItem("musitifyPlaybackState");
             sessionStorage.removeItem("musitifyAutoplayNextPage");
             localStorage.setItem("user", JSON.stringify(data.user));

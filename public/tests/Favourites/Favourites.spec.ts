@@ -28,6 +28,7 @@ test.afterEach(async ({ page,FavouritePage }) => {
 test('Click heart button adds song to Favorites', async ({ page, FavouritePage, loginPage }) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await FavouritePage.waitForSongCard('BANG BANG');
   await removeFavouriteIfPresent(FavouritePage, 'BANG BANG');
   await FavouritePage.AddToFavouriteButton('BANG BANG').click();
   await FavouritePage.SideBarFavouriteButton.click();
@@ -38,6 +39,7 @@ test('Click heart button adds song to Favorites', async ({ page, FavouritePage, 
 test('Click heart button again removes song from Favorites', async ({ page, FavouritePage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await FavouritePage.waitForSongCard('BANG BANG');
   await removeFavouriteIfPresent(FavouritePage, 'BANG BANG');
   await FavouritePage.AddToFavouriteButton('BANG BANG').click();
   await FavouritePage.SideBarFavouriteButton.click();
@@ -54,6 +56,7 @@ test('Click heart button again removes song from Favorites', async ({ page, Favo
 test('Favorites are saved after page reload', async ({ page, FavouritePage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await FavouritePage.waitForSongCard('BANG BANG');
   await removeFavouriteIfPresent(FavouritePage, 'BANG BANG');
   await FavouritePage.AddToFavouriteButton('BANG BANG').click();
   await FavouritePage.SideBarFavouriteButton.click();
@@ -70,6 +73,7 @@ test('Favorites are saved after page reload', async ({ page, FavouritePage, logi
 test('Favorites are user-specific', async ({ page, FavouritePage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await FavouritePage.waitForSongCard('BANG BANG');
   await removeFavouriteIfPresent(FavouritePage, 'BANG BANG');
   await FavouritePage.AddToFavouriteButton('BANG BANG').click();
   await FavouritePage.SideBarFavouriteButton.click();
@@ -90,6 +94,7 @@ test('Favorites are user-specific', async ({ page, FavouritePage, loginPage }, t
   });
   await FavouritePage.LogoutButton.click();
   await loginPage.login(NormalUser.email, NormalUser.password);
+  await FavouritePage.waitForSongCard('BANG BANG');
   await FavouritePage.SideBarFavouriteButton.click();
   await expect(FavouritePage.favouriteSongCardByTitle('BANG BANG')).toBeVisible();
 });
@@ -101,6 +106,7 @@ async function removeFavouriteIfPresent(FavouritePage, songTitle: string) {
     await expect(FavouritePage.favouriteSongCardByTitle(songTitle)).not.toBeVisible();
   }
   await FavouritePage.SideBarHomeButton.click();
+  await FavouritePage.waitForSongsLoaded();
 }
 
 async function cleanupFavouriteForUser(loginPage, FavouritePage, user, songTitle: string) {

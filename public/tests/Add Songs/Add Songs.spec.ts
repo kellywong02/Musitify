@@ -86,6 +86,7 @@ test('Add Song Successfully', async ({ page, addMusicPage, loginPage }, testInfo
   await expect(page).toHaveURL(/home.html/);
   await removeUploadedSongsFromApp(page, testSong);
   await page.reload();
+  await addMusicPage.waitForSongCard('BANG BANG');
 
   const BeforeSongAddedScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Song-Added-submitted.png' });
   await testInfo.attach('Step 1 - Before Song Added', {
@@ -151,13 +152,12 @@ test('Unable to add song if fields are empty', async ({ page, addMusicPage, logi
 test('Songs are able to be played after uploading', async ({ page, addMusicPage, loginPage }, testInfo) => {
   await loginPage.login(AdminUser.email, AdminUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await addMusicPage.waitForSongsLoaded();
   await addMusicPage.songCardPlayButton('BANG BANG').click();
   await expect(addMusicPage.SongPlayerTitle).toBeVisible();
   await expect(addMusicPage.SongPlayerTitle).toContainText(new RegExp(escapeRegExp("BANG BANG"), 'i'));
   await expect(addMusicPage.SongPlayerArtist).toBeVisible();
   await expect(addMusicPage.SongPlayerArtist).toContainText(new RegExp(escapeRegExp("IVE"), 'i'));
 }); 
-
-
 
 

@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-
-export class Musitify_Favourites {
+export class Musitify_Search_Filtering{
   readonly page: Page;
   readonly LoginPage_url = '/login.html';
   readonly MainPage_url = '/home.html#home';
@@ -11,7 +10,7 @@ export class Musitify_Favourites {
   }
 
   async goto() {
-    await this.page.goto(this.MainPage_url);
+    await this.page.goto(this.LoginPage_url);
     const html = await this.page.content();
     expect(html).toContain(this.titleRegex);
   }
@@ -57,54 +56,27 @@ export class Musitify_Favourites {
     });
   }
 
-  songCardByTitle(songTitle: string): Locator {
+  songCardByTitle(songTitle: string): Locator{
     return this.page.locator('.song-card', {
       has: this.page.locator('.song-title', { hasText: new RegExp(escapeRegExp(songTitle), 'i') })
     });
   }
 
-  favouriteSongCardByTitle(songTitle: string): Locator {
-    return this.page.locator('#favoriteSongList .song-card', {
-      has: this.page.locator('.song-title', { hasText: new RegExp(escapeRegExp(songTitle), 'i') })
+  get SearchingTextbox(): Locator{
+    return this.page.getByRole('textbox', { name: 'Search songs or artists...' });
+  }
+
+  songCardByArtist(songArtist: string): Locator{
+    return this.page.locator('.song-card', {
+      has: this.page.locator('.artist', { hasText: new RegExp(escapeRegExp(songArtist), 'i') })
     });
   }
+  
 
-  AddToFavouriteButton(songTitle: string): Locator {
-    return this.songCardByTitle(songTitle).getByRole('button', { name: 'Add to favorites' });
-  }
 
-  RemoveFromFavourite(songTitle: string): Locator{
-    return this.songCardByTitle(songTitle).getByRole('button', { name: 'Remove from favorites' });
-  }
-
-  RemoveFromFavouriteList(songTitle: string): Locator {
-    return this.favouriteSongCardByTitle(songTitle).getByRole('button', { name: 'Remove from favorites' });
-  }
-
-  get SideBarHomeButton(): Locator {
-    return this.page.locator('.menu', { hasText: 'Home' });
-  }
-
-  get SideBarSearchButton(): Locator {
-    return this.page.locator('.menu', { hasText: 'Search' });
-  }
-
-  get SideBarFavouriteButton(): Locator {
-    return this.page.locator('.menu', { hasText: 'Favorites' });
-  }
-
-  get SideBarLuckyDrawButton(): Locator {
-    return this.page.locator('.menu', { hasText: 'Daily Lucky Draw' });
-  }
-
-  get SideBarPlaylistButton(): Locator {
-    return this.page.locator('.menu', { hasText: 'Playlists' });
-  }
-
-  get LogoutButton(): Locator {
-    return this.page.getByRole('button', { name: 'Logout' });
-  }
 }
+
+
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

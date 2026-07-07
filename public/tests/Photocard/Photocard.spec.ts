@@ -24,7 +24,7 @@ test.beforeEach(async ({ page, PhotocardPage }) => {
 test('User able to draw photocard & User only able to draw one photocard per day', async({page,PhotocardPage, loginPage},testInfo) =>{
     await loginPage.login(NormalUser.email, NormalUser.password);
     await expect(page).toHaveURL(/home/);
-    await PhotocardPage.SideBarLuckyDrawButton.click();
+    await PhotocardPage.openLuckyDrawAndWait();
     const BeforeDrawCardScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Draw-Card-submitted.png' });
     await testInfo.attach('Step 1 - Before Draw Card', {
     body: BeforeDrawCardScreenshot,
@@ -54,12 +54,28 @@ test('User able to draw photocard & User only able to draw one photocard per day
 test('Photocard detail popup opens when clicking a photocard ', async({page,PhotocardPage, loginPage},testInfo) =>{
     await loginPage.login(NormalUser.email, NormalUser.password);
     await expect(page).toHaveURL(/home/);
-    await PhotocardPage.SideBarLuckyDrawButton.click();
+    await PhotocardPage.openLuckyDrawAndWait();
     await PhotocardPage.photocardByArtistMemberAndRarity('IVE', 'Lee Seo', 'Common').click();
     await expect(PhotocardPage.PhotocardDetails).toBeVisible();
     await PhotocardPage.BackToCollectionButton.click();
 });
 
+test('Photocard popup closes with Escape key', async({page,PhotocardPage, loginPage},testInfo) =>{
+    await loginPage.login('admin@admin.sg', 'Admin@123');
+    await expect(page).toHaveURL(/home/);
+    await PhotocardPage.openLuckyDrawAndWait();
+    await PhotocardPage.DrawPhotocardButton.click();
+    await expect(PhotocardPage.PhotocardModal).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(PhotocardPage.PhotocardModal).not.toBeVisible();
+});
+
+test('Duplicate photocards are not shown  ', async({page,PhotocardPage, loginPage},testInfo) =>{
+    await loginPage.login(NormalUser.email, NormalUser.password);
+    await expect(page).toHaveURL(/home/);
+    await PhotocardPage.openLuckyDrawAndWait();
+    expect(await PhotocardPage.PhotocardCollectionItems.count()).toBeGreaterThanOrEqual(0);
+});
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

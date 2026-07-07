@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 export class Musitify_Login{
     readonly page: Page;
-  readonly LoginPage_url = 'http://localhost:3000/login.html';
+  readonly LoginPage_url = '/login.html';
   readonly titleRegex = 'Musitify';
 
   constructor(page: Page) {

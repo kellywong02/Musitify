@@ -5,7 +5,7 @@ dotenv.config();
 
 const config: PlaywrightTestConfig = {
   testDir: 'public/tests',
-  timeout: 30_000,
+  timeout: 90_000,
   expect: {
     timeout: 5000,
   },
@@ -17,7 +17,7 @@ const config: PlaywrightTestConfig = {
   reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
   webServer: {
     command: 'npm run start',
-    url: 'http://localhost:3000/login.html',
+    url: 'https://musitify.vercel.app/login.html',
     reuseExistingServer: !process.env.CI,
     timeout: 15_000,
   },
@@ -25,7 +25,7 @@ const config: PlaywrightTestConfig = {
     actionTimeout: 0,
     screenshot: 'on',
     trace: 'on-first-retry',
-    baseURL: 'http://localhost:3000',
+    baseURL: 'https://musitify.vercel.app',
     viewport: null,
     launchOptions: {
     args: ['--start-maximized'],

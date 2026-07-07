@@ -8,6 +8,8 @@ import { Musitify_SongPlayer } from '../pageObjects/SongPlayer';
 import { Musitify_Favourites } from '../pageObjects/Favourites';
 import { Musitify_Playlist } from '../pageObjects/Playlist';
 import { Musitify_Photocard } from '../pageObjects/Photocard';
+import { Musitify_Chatbot } from '../pageObjects/Chatbot';
+import { Musitify_Search_Filtering } from '../pageObjects/Filtering';
 
 type PageFixtures = {
   addMusicPage: Musitify_AddMusic;
@@ -19,6 +21,8 @@ type PageFixtures = {
   FavouritePage: Musitify_Favourites;
   PlaylistPage: Musitify_Playlist;
   PhotocardPage: Musitify_Photocard;
+  ChatbotPage: Musitify_Chatbot;
+  SearchPage: Musitify_Search_Filtering
 };
 
 export const test = base.extend<PageFixtures>({
@@ -56,6 +60,14 @@ export const test = base.extend<PageFixtures>({
 
   PhotocardPage: async ({ page }, use) => {
     await use(new Musitify_Photocard(page));
+  },
+
+  ChatbotPage: async ({ page }, use) => {
+    await use(new Musitify_Chatbot(page));
+  },
+  
+  SearchPage: async ({ page }, use) => {
+    await use(new Musitify_Search_Filtering(page));
   },
 });
 

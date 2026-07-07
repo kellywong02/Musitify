@@ -609,6 +609,18 @@ app.post('/chat', async (req, res) => {
         });
     }
 
+    const requestedArtist = getRequestedRecommendationArtist(userMessage, songs);
+    const requestedArtistHasSongs = requestedArtist && songs.some(song =>
+        normalizeArtistName(song.artist) === normalizeArtistName(requestedArtist)
+    );
+    if (requestedArtist && !requestedArtistHasSongs) {
+        return res.json({
+            reply: getLocalChatbotReply(userMessage, songs),
+            source: 'local',
+            reason: 'requested_artist_not_available'
+        });
+    }
+
     if (!process.env.OPENAI_API_KEY) {
         return res.json({
             reply: getLocalChatbotReply(userMessage, songs),
@@ -633,6 +645,8 @@ app.post('/chat', async (req, res) => {
                             'You are Musitify Assistant, a concise helper inside a music web app.',
                             'Help users with songs, favorites, playlists, uploads, shuffle, and Lucky Draw.',
                             'Use the provided app context when relevant.',
+                            'Only recommend songs from availableSongs.',
+                            'If the user asks for an artist with no available songs, say that artist is not available in Musitify right now.',
                             'Keep replies short and practical.'
                         ].join(' ')
                     },
@@ -1135,7 +1149,16 @@ function getLocalChatbotReply(message, songs = []) {
             return 'I do not see any songs loaded yet.';
         }
 
-        const song = songs[Math.floor(Math.random() * songs.length)];
+        const requestedArtist = getRequestedRecommendationArtist(message, songs);
+        const matchingSongs = requestedArtist
+            ? songs.filter(song => normalizeArtistName(song.artist) === normalizeArtistName(requestedArtist))
+            : songs;
+
+        if (requestedArtist && !matchingSongs.length) {
+            return `I do not see any ${requestedArtist} songs in Musitify right now.`;
+        }
+
+        const song = matchingSongs[Math.floor(Math.random() * matchingSongs.length)];
         return `Try listening to ${String(song.title || '').toUpperCase()} by ${song.artist}.`;
     }
 
@@ -1144,6 +1167,41 @@ function getLocalChatbotReply(message, songs = []) {
     }
 
     return 'I can help with uploading songs, favorites, playlists, Lucky Draw, shuffle, and song recommendations.';
+}
+
+function getRequestedRecommendationArtist(message, songs = []) {
+    const text = String(message || '').toLowerCase();
+    const availableArtist = songs
+        .map(song => String(song.artist || '').trim())
+        .filter(Boolean)
+        .find(artist => text.includes(normalizeArtistName(artist)));
+
+    if (availableArtist) {
+        return availableArtist;
+    }
+
+    const match = text.match(/recommend(?: me)?(?: some)?\s+([a-z0-9& .'-]+?)(?:'s)?\s+songs?\b/i);
+    if (!match) {
+        return '';
+    }
+
+    return toDisplayArtistName(match[1]);
+}
+
+function normalizeArtistName(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/'s\b/g, '')
+        .replace(/[^a-z0-9]+/g, '')
+        .trim();
+}
+
+function toDisplayArtistName(value) {
+    return String(value || '')
+        .replace(/'s\b/i, '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toUpperCase();
 }
 
 function buildPhotocardFileName(card, extension) {

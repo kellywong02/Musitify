@@ -46,6 +46,7 @@ test('Music App Remove Music', async ({ page, loginPage }, testInfo) => {
   await loginPage.login('admin@admin.sg', 'Admin@123');
   await expect(page).toHaveURL(/home.html/);
   await page.reload();
+  await SongRemovedPage.waitForSongCard(Song.Song_Title);
 
   const BeforeSongRemovedScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Song-Removed-submitted.png' });
   await testInfo.attach('Step 1 - Before Song Removed', {
@@ -82,6 +83,7 @@ test('Remove Song Dialog Can Be Cancelled', async ({ page, loginPage }, testInfo
   await loginPage.login('admin@admin.sg', 'Admin@123');
   await expect(page).toHaveURL(/home.html/);
   await page.reload();
+  await SongRemovedPage.waitForSongCard(Song.Song_Title);
 
   const BeforeSongRemovedScreenshot = await page.screenshot({ path: 'screenshots/step1-Before-Song-Removed-submitted.png' });
   await testInfo.attach('Step 1 - Before Song Removed', {
@@ -103,6 +105,6 @@ test('Remove Song Dialog Can Be Cancelled', async ({ page, loginPage }, testInfo
 test('Normal User Does Not Have Remove Button', async ({ page, addMusicPage, loginPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongRemovedPage.waitForSongCard('BANG BANG');
   await expect(SongRemovedPage.RemoveSong("BANG BANG")).not.toBeVisible();
 }); 
-

@@ -95,6 +95,7 @@ test('Add Song To Playlist', async ({ page, PlaylistPage, loginPage },testInfo) 
     contentType: 'image/png',
   });
   await PlaylistPage.SideBarHomeButton.click();
+  await PlaylistPage.waitForSongCard('BANG BANG');
   await PlaylistPage.AddToPlaylist('BANG BANG').click();
   await expect(PlaylistPage.ExistingPlaylist(playlistName)).toBeVisible();
   await PlaylistPage.ExistingPlaylist(playlistName).click();
@@ -118,6 +119,7 @@ test('Remove Song To Playlist', async ({ page, PlaylistPage, loginPage },testInf
   await PlaylistPage.CreatePlaylistButton.click();
   await PlaylistPage.playlistByName(playlistName).click();
   await PlaylistPage.SideBarHomeButton.click();
+  await PlaylistPage.waitForSongCard('BANG BANG');
   await PlaylistPage.AddToPlaylist('BANG BANG').click();
   await expect(PlaylistPage.ExistingPlaylist(playlistName)).toBeVisible();
   await PlaylistPage.ExistingPlaylist(playlistName).click();
@@ -148,6 +150,7 @@ test('Playlist remains after page reload', async ({ page, PlaylistPage, loginPag
   await PlaylistPage.CreatePlaylistButton.click();
   await PlaylistPage.playlistByName(playlistName).click();
   await PlaylistPage.SideBarHomeButton.click();
+  await PlaylistPage.waitForSongCard('BANG BANG');
   await PlaylistPage.AddToPlaylist('BANG BANG').click();
   await expect(PlaylistPage.ExistingPlaylist(playlistName)).toBeVisible();
   await PlaylistPage.ExistingPlaylist(playlistName).click();

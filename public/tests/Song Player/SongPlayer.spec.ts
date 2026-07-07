@@ -25,6 +25,7 @@ test.afterEach(async ({ page }) => {
 test('Song player page shows selected song cover/title/artist/duration ', async ({ page, loginPage, SongPlayerPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
   await expect(SongPlayerPage.SongPlayerTitle).toBeVisible();
@@ -35,6 +36,7 @@ test('Song player page shows selected song cover/title/artist/duration ', async 
 test('SUpcoming Songs list appears on the right', async ({ page, loginPage, SongPlayerPage }, testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
   await expect(SongPlayerPage.UpcomingSongTitles.first()).toBeVisible();
@@ -43,6 +45,7 @@ test('SUpcoming Songs list appears on the right', async ({ page, loginPage, Song
 test('Upcoming song area is scrollable', async ({ page, SongPlayerPage, loginPage }) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
 
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
@@ -68,6 +71,7 @@ test('Upcoming song area is scrollable', async ({ page, SongPlayerPage, loginPag
 test('Clicking an upcoming song changes the current song', async ({ page, SongPlayerPage, loginPage },testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await expect(SongPlayerPage.BottomSongPlayerTitle).toContainText(/BANG BANG/i);
   const upcomingTitle = await SongPlayerPage.UpcomingSongTitles.first().innerText();
@@ -87,6 +91,7 @@ test('Clicking an upcoming song changes the current song', async ({ page, SongPl
 test('Lyrics card is on the right side', async ({ page, SongPlayerPage, loginPage }) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
   await expect(SongPlayerPage.UpcomingCard).toBeVisible();
@@ -103,6 +108,7 @@ test('Lyrics card is on the right side', async ({ page, SongPlayerPage, loginPag
 test('Lyrics loads for selected song', async ({ page, SongPlayerPage, loginPage },testInfo) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await expect(SongPlayerPage.BottomSongPlayerTitle).toContainText(/BANG BANG/i);
   await SongPlayerPage.OpenSongPlayer.click();
@@ -118,6 +124,7 @@ test('Lyrics loads for selected song', async ({ page, SongPlayerPage, loginPage 
 test('Lyrics card is scrollable', async ({ page, SongPlayerPage, loginPage }) => {
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
 
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
@@ -189,6 +196,7 @@ test('Synced lyric line highlights during playback if synced lyrics exist', asyn
 
   await loginPage.login(NormalUser.email, NormalUser.password);
   await expect(page).toHaveURL(/home.html/);
+  await SongPlayerPage.waitForSongCard('BANG BANG');
 
   await SongPlayerPage.songCardPlayButton('BANG BANG').click();
   await SongPlayerPage.OpenSongPlayer.click();
