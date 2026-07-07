@@ -5,12 +5,27 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.get("/deployment-check", (req, res) => {
+    res.json({
+        app: "musitify",
+        rootRoute: "login.html",
+        deployedAt: "2026-07-07-root-route-fix"
+    });
+});
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -742,10 +757,20 @@ app.get('/lyrics', async (req, res) => {
     }
 });
 
-// START SERVER
-app.listen(3000, () => {
-    console.log('Server running on http://localhost:3000');
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
+// START SERVER
+if (require.main === module) {
+    const port = process.env.PORT || 3000;
+
+    app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
+}
+
+module.exports = app;
 
 function formatSong(song) {
     return {
